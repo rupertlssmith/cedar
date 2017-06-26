@@ -1,9 +1,19 @@
-module Client.Top exposing (delta2url, location2messages, init, update, subscriptions, view)
+module Client.Top
+    exposing
+        ( delta2url
+        , location2messages
+        , init
+        , update
+        , subscriptions
+        , view
+        , Model
+        , Msg
+        )
 
 {-|
 The content editor client top module.
 
-@docs delta2url, location2messages, init, update, subscriptions, view
+@docs delta2url, location2messages, init, update, subscriptions, view, Model, Msg
 -}
 
 import RouteUrl as Routing
@@ -149,12 +159,18 @@ toAuthenticated contentEditor session =
             Nothing
 
 
+{-|
+The content editor program model.
+-}
 type alias Model =
     { auth : AuthController.Model
     , session : Session
     }
 
 
+{-|
+The content editor program top-level message types.
+-}
 type Msg
     = AuthMsg AuthController.Msg
     | WelcomeMsg Welcome.Auth.Msg
