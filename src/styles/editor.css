@@ -1,0 +1,221 @@
+.editor-inline__wrapper {
+    position: relative;
+}
+
+.editor-inline__editor {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0px;
+    left: 0px;
+    background: white;
+    opacity: 1.0;
+}
+
+.editor-overlay__container {
+    position: absolute;
+    z-index: 10;
+}
+
+.editor-overlay__frame {
+    position: absolute;
+    z-index: inherit;
+}
+
+.editor-overlay__controlbar {
+    height: 30px;
+    padding-top: 2px;
+    border: 1px solid #aaaaaa;
+    background: white;
+    width: 200px;
+    position: absolute;
+    z-index: 9;
+}
+
+.editor-overlay__editor {
+    height: 100%;
+    width: 100%;
+}
+
+.editor-overlay__textarea {
+    height: 100%;
+    width: 100%;
+    padding: 5px;
+    outline: none;
+    resize: none;
+    overflow-y: scroll;
+    opacity: 0.95;
+}
+
+.sidenav {
+    height: 100%;
+    width: 350px;
+    border-right: 1px solid black;
+    background: white;
+    position: fixed;
+    z-index: 10;
+    top: 0;
+    left: 0px;
+    overflow-x: hidden;
+    -webkit-box-shadow: 3px 0px 10px 0px rgba(0, 0, 0, 0.75);
+    -moz-box-shadow: 3px 0px 10px 0px rgba(0, 0, 0, 0.75);
+    box-shadow: 3px 0px 10px 0px rgba(0, 0, 0, 0.75);
+}
+
+.sidenav__logout-button {
+    margin-top: 10px;
+    margin-right: 4px;
+}
+
+.sidenav__userbar {
+    height: 48px;
+    padding-top: 2px;
+    border-bottom: 1px solid #aaaaaa;
+    background: #dddddd;
+}
+
+.sidenav__avatar-cropper {
+    width: 42px;
+    height: 42px;
+    position: relative;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 1px solid #aaaaaa;
+}
+
+.sidenav__controlbar {
+    height: 30px;
+    padding-top: 2px;
+    border-bottom: 1px solid #aaaaaa;
+}
+
+.slide-button {
+    height: 80px;
+    width: 40px;
+    border: 1px solid black;
+    border-radius: 20px;
+    background: black;
+    position: fixed;
+    z-index: 11;
+    top: calc(50% - 40px);
+    left: -20px;
+    overflow-x: hidden;
+}
+
+.click-plane {
+    height: 100%;
+    width: 100%;
+    background: black;
+    opacity: 0.05;
+    position: fixed;
+    z-index: 9;
+    top: 0px;
+    left: 0px;
+    overflow-x: hidden;
+}
+
+.click-plane__section {
+    background: black;
+    opacity: 0.05;
+    position: fixed;
+    z-index: 9;
+    overflow-x: hidden;
+}
+
+
+.slide-button__inset {
+    display: block;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: #282828;
+    background-image: url('../images/chevron_right_white_36x36.png');
+    background-repeat: no-repeat;
+    background-position: -3px -4px;
+    position: absolute;
+    top: calc(50% - 14px);
+    left: 14px;
+}
+
+.tree-container {}
+
+.tree-wholerow {
+    width: 100%;
+    position: absolute;
+    left: 0;
+    height: 24px;
+}
+
+.tree-wholerow__hovered {
+    background-color: #e7f4f9;
+}
+
+.tree-wholerow__selected {
+    background-color: #a7d4e9;
+}
+
+.tree-wholerow__ul {
+    display: inline-block;
+    min-width: 100%;
+    list-style-type: none;
+    margin-bottom: 0px;
+}
+
+.tree-wholerow__controlbar {
+    float: right;
+    position: relative;
+}
+
+.tree-anchor {
+    position: relative;
+}
+
+.control-icon {
+    width: 24px;
+    height: 24px;
+    line-height: 24px;
+    background-repeat: no-repeat;
+    position: relative;
+    display: inline-block;
+    text-decoration: none;
+    margin: 0;
+    padding: 0;
+    vertical-align: top;
+    text-align: center;
+}
+
+.control-icon__add {
+    background-image: url('../images/tree_add_24x24.png');
+}
+
+.control-icon__open {
+    background-image: url('../images/tree_open_24x24.png');
+}
+
+.control-icon__closed {
+    background-image: url('../images/tree_closed_24x24.png');
+}
+
+.control-icon__save {
+    background-image: url('../images/save_24x24.png');
+}
+
+.control-icon__markdown {
+    background-image: url('../images/markdown_24x24.png');
+}
+
+.control-icon__wysiwyg {
+    background-image: url('../images/wysiwyg_24x24.png');
+}
+
+.control-icon__preview {
+    background-image: url('../images/preview_24x24.png');
+}
+
+.control-icon__collapse-all {
+    background-image: url('../images/collapse-all_24x24.png');
+}
+
+a, a:active, a:focus {
+    outline: none;
+}

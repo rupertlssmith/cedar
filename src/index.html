@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:ng="http://angularjs.org" class="no-js" lang="en" ng-app="jModeller" id="ng-app">
+
+<head>
+    <meta charset="UTF-8">
+
+    <link rel="stylesheet" href="styles/roboto.css" />
+    <link rel="stylesheet" href="styles/material-icons.css" />
+    <link rel="stylesheet" href="styles/material.green-indigo.min.css" />
+
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/editor.css">
+
+    <script src="jtrial_web_ui.js"></script>
+    <script type="text/javascript" src="//cdn.jsdelivr.net/jquery/1/jquery.min.js"></script>
+</head>
+
+<body id="jtrial">
+    <div id="jtrial-app"></div>
+    <script>
+        const appElement = document.getElementById("jtrial-app");
+        const app = Elm.Client.Main.embed(appElement);
+
+        const topElement = document.getElementById("jtrial");
+
+        const observer = new MutationObserver(mutations => {
+            mutations.forEach(mutation => {
+                $(mutation.target).closest('.watch-resize').each(function () {
+                    var result = {
+                        id: $(this).context.id,
+                        height: $(this).context.clientHeight,
+                        width: $(this).context.clientWidth
+
+                    };
+
+                    app.ports.mutation.send(result);
+                });
+            });
+        });
+        observer.observe(topElement, {
+            childList: true,
+            subtree: true
+        })
+
+        var scroll = window.pageYOffset || document.body.scrollTop;
+
+        window.onscroll = function() {
+            var newScroll = window.pageYOffset || document.body.scrollTop;
+            app.ports.scroll.send([scroll, newScroll]);
+            scroll = newScroll;
+        };
+    </script>
+</body>
+
+</html>

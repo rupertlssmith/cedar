@@ -1,0 +1,8 @@
+{
+    "name": "builder-ui",
+    "description": "User admin.",
+    "version": "0.0.0",
+    "dependencies": {
+        "thesett-laf": "https://github.com/rupertlssmith/thesett_laf.git"
+    }
+}
