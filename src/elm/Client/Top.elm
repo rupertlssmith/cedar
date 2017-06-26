@@ -19,6 +19,8 @@ import Html exposing (Html)
 import Config exposing (config)
 import Auth
 import Maybe.Extra
+import ResizeObserver
+import ScrollPort
 
 
 type Session
@@ -190,14 +192,14 @@ setLoginLocations authState =
 {-|
 Sets up the subscriptions for the content editor.
 -}
-subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions : ResizeObserver.Resize -> ScrollPort.Scroll -> Model -> Sub Msg
+subscriptions resize scroll model =
     Sub.batch
         (optional
             [ Sub.map AuthMsg (AuthController.subscriptions model.auth) |> required
             , mapWhenWithContentEditor
                 (\{ contentEditor } ->
-                    CE.subscriptions contentEditor
+                    CE.subscriptions resize scroll contentEditor
                         |> Sub.map ContentEditorMsg
                 )
                 model.session
@@ -380,47 +382,3 @@ view model =
 
         Authenticated { contentEditor } ->
             CE.view contentEditor |> Html.map ContentEditorMsg
-
-
-
--- The Program
-
-
-{-|
-The entry point for the client side content editor.
--}
-main : Routing.RouteUrlProgram Never Model Msg
-main =
-    routeMain
-
-
-debugMain =
-    let
-        navApp =
-            Routing.navigationApp
-                { delta2url = delta2url
-                , location2messages = location2messages
-                , init = init
-                , update = update
-                , subscriptions = subscriptions
-                , view = view
-                }
-    in
-        TimeTravel.program navApp.locationToMessage
-            { init = navApp.init
-            , subscriptions = navApp.subscriptions
-            , update = navApp.update
-            , view = navApp.view
-            }
-
-
-routeMain : Routing.RouteUrlProgram Never Model Msg
-routeMain =
-    Routing.program
-        { delta2url = delta2url
-        , location2messages = location2messages
-        , init = init
-        , update = update
-        , subscriptions = subscriptions
-        , view = view
-        }

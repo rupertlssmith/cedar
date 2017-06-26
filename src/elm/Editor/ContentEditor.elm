@@ -36,10 +36,10 @@ import Templates exposing (layouts, templates)
 import Renderer.Flexi exposing (Editor, LinkBuilder)
 import Utils exposing (error, message)
 import ResizeObserver exposing (ResizeEvent)
+import ScrollPort exposing (Scroll, Move)
 import Editor.ControlBar as ControlBar
 import Function exposing (swirll)
 import StateModel exposing (boolToMaybe, (>&&>), (>||>), (>##>), defaultTransition, mapWhenCompose)
-import ScrollPort exposing (scroll, Move)
 import MultiwayTreeZipper as Zipper exposing (Zipper)
 import MultiwayTree as Tree exposing (Tree(Tree))
 import TreeUtils exposing (updateTree)
@@ -467,8 +467,8 @@ init config userId =
 -- Subscriptions
 
 
-subscriptions : Model -> Sub Msg
-subscriptions model =
+subscriptions : ResizeObserver.Resize -> ScrollPort.Scroll -> Model -> Sub Msg
+subscriptions resize scroll model =
     Sub.batch
         (optional
             [ Animation.subscription Animate
@@ -491,8 +491,8 @@ subscriptions model =
                         |> Sub.map OverlayMsg
                 )
                 model.mode
-            , ResizeObserver.resize Resize |> required
-            , ScrollPort.scroll BodyScroll |> required
+            , resize |> Sub.map (\event -> Resize event) |> required
+            , scroll |> Sub.map (\event -> BodyScroll event) |> required
             ]
         )
 

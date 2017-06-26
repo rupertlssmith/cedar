@@ -8,12 +8,12 @@ import TimeTravel.Navigation as TimeTravel
 {-|
 The entry point for the client side content editor.
 -}
-main : Routing.RouteUrlProgram Never Model Msg
-main =
-    routeMain
+main : ResizeObserver.Resize -> ScrollPort.Scroll -> Routing.RouteUrlProgram Never Model Msg
+main resize scroll =
+    routeMain resize scroll
 
 
-debugMain =
+debugMain resize scroll =
     let
         navApp =
             Routing.navigationApp
@@ -21,7 +21,7 @@ debugMain =
                 , location2messages = location2messages
                 , init = init
                 , update = update
-                , subscriptions = subscriptions
+                , subscriptions = subscriptions resize scroll
                 , view = view
                 }
     in
@@ -33,13 +33,13 @@ debugMain =
             }
 
 
-routeMain : Routing.RouteUrlProgram Never Model Msg
-routeMain =
+routeMain : ResizeObserver.Resize -> ScrollPort.Scroll -> Routing.RouteUrlProgram Never Model Msg
+routeMain resize scroll =
     Routing.program
         { delta2url = delta2url
         , location2messages = location2messages
         , init = init
         , update = update
-        , subscriptions = subscriptions
+        , subscriptions = subscriptions resize scroll
         , view = view
         }

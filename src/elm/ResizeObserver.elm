@@ -1,10 +1,15 @@
-port module ResizeObserver
-    exposing
-        ( ResizeEvent
-        , resize
-        )
+module ResizeObserver exposing (ResizeEvent, Resize)
+
+{-|
+Defines the type of a resize observer.
+
+@docs ResizeEvent, Resize
+-}
 
 
+{-|
+Describes the fields that a resize event must produce.
+-}
 type alias ResizeEvent =
     { id : String
     , width : Float
@@ -12,9 +17,8 @@ type alias ResizeEvent =
     }
 
 
-resize : (ResizeEvent -> msg) -> Sub msg
-resize =
-    mutation
-
-
-port mutation : (ResizeEvent -> msg) -> Sub msg
+{-|
+Describes the type of a resize observer.
+-}
+type alias Resize =
+    Sub ResizeEvent
