@@ -10,6 +10,7 @@ module Editor.ContentEditor
         , location2messages
         )
 
+import Dict exposing (Dict)
 import Animation exposing (px, turn, Property, Interpolation, State)
 import Time exposing (second, Time)
 import Ease
@@ -32,8 +33,7 @@ import ModelUtils exposing (asMarkdown, asUUID, withMarkdown)
 import Navigation
 import Optional exposing (optional, required, when)
 import RouteUrl as Routing
-import Templates exposing (layouts, templates)
-import Renderer.Flexi exposing (Editor, LinkBuilder)
+import Renderer.Flexi exposing (Editor, LinkBuilder, Layout, Template)
 import Utils exposing (error, message)
 import ResizeObserver exposing (ResizeEvent)
 import ScrollPort exposing (Scroll, Move)
@@ -1148,8 +1148,12 @@ emptyDiv =
     div [] []
 
 
-view : Model -> Html Msg
-view model =
+view :
+    Dict String (Layout Msg)
+    -> Dict String (Template Msg)
+    -> Model
+    -> Html Msg
+view layouts templates model =
     let
         maybeContent =
             mapWhenWithContent (\{ contentItem } -> contentItem) model.mode
@@ -1161,7 +1165,7 @@ view model =
                         [ mapWhenWithSelectedModel (\{ overlay } -> Overlay.view overlay |> Html.map OverlayMsg) model.mode
                         , div []
                             (optional
-                                [ mapWhenWithContent (\{ contentItem } -> contentView model contentItem) model.mode
+                                [ mapWhenWithContent (\{ contentItem } -> contentView layouts templates model contentItem) model.mode
                                 , mapWhenWithSlideButton (\button -> slideButton button) model.menu
                                 , mapWhenWithAvailable (\available -> sideNav model available maybeContent) model.menu
                                 , when (isJust (maybeOpen model.menu)) clickPlane
@@ -1244,9 +1248,18 @@ clickPlane =
         []
 
 
-contentView : Model -> Content -> Html Msg
-contentView model content =
-    Renderer.Flexi.view layouts templates (linker model.config.applicationContextRoot) (editor model.mode) content
+contentView :
+    Dict String (Layout Msg)
+    -> Dict String (Template Msg)
+    -> Model
+    -> Content
+    -> Html Msg
+contentView layouts templates model content =
+    Renderer.Flexi.view layouts
+        templates
+        (linker model.config.applicationContextRoot)
+        (editor model.mode)
+        content
 
 
 linker : String -> LinkBuilder msg

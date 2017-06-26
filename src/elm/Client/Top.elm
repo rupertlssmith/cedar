@@ -16,6 +16,8 @@ The content editor client top module.
 @docs delta2url, location2messages, init, update, subscriptions, view, Model, Msg
 -}
 
+import Dict exposing (Dict)
+import Renderer.Flexi exposing (Layout, Template)
 import RouteUrl as Routing
 import Editor.ContentEditor as CE
 import TimeTravel.Navigation as TimeTravel
@@ -384,8 +386,12 @@ updateContentEditorMsg msg model =
 {-|
 Top level view function for the content editor SPA.
 -}
-view : Model -> Html Msg
-view model =
+view :
+    Dict String (Layout CE.Msg)
+    -> Dict String (Template CE.Msg)
+    -> Model
+    -> Html Msg
+view layouts templates model =
     case model.session of
         Initial ->
             Html.div [] []
@@ -397,4 +403,4 @@ view model =
             Welcome.Auth.notPermittedView welcome |> Html.map WelcomeMsg
 
         Authenticated { contentEditor } ->
-            CE.view contentEditor |> Html.map ContentEditorMsg
+            CE.view layouts templates contentEditor |> Html.map ContentEditorMsg
