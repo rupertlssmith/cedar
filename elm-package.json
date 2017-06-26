@@ -10,7 +10,6 @@
     "exposed-modules": [
         "Renderer.Flexi",
         "ModelUtils",
-        "Templates",
         "Config"
     ],
     "dependencies": {
