@@ -8,7 +8,6 @@
         "src/generated/elm"
     ],
     "exposed-modules": [
-        "Model",
         "Renderer.Flexi",
         "ModelUtils",
         "Templates",
