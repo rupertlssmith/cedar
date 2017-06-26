@@ -1,4 +1,10 @@
-module Client.Main exposing (..)
+module Client.Main exposing (main)
+
+{-|
+The content editor client.
+
+@docs main
+-}
 
 import RouteUrl as Routing
 import Editor.ContentEditor as CE
@@ -360,6 +366,10 @@ view model =
 -- The Program
 
 
+{-|
+The entry point for the client side content editor.
+-}
+main : Routing.RouteUrlProgram Never Model Msg
 main =
     routeMain
 
