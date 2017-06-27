@@ -1,5 +1,5 @@
 {
-    "version": "0.7.0",
+    "version": "0.8.0",
     "summary": "Example of Html rendering with Elm.",
     "repository": "https://github.com/rupertlssmith/elm-java.git",
     "license": "BSD3",
@@ -13,7 +13,8 @@
         "Config",
         "Client.Top",
         "ScrollPort",
-        "ResizeObserver"
+        "ResizeObserver",
+        "Model"
     ],
     "dependencies": {
         "elm-lang/core": "5.0.0 <= v < 6.0.0",

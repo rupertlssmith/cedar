@@ -1,11 +1,32 @@
 module Model exposing(..)
 
+{-|
+@docs PredicateType, predicateTypeEncoder, predicateTypeDecoder
+
+ 
+ 
+ 
+@docs Base, baseEncoder, baseDecoder
+@docs Titled, titledEncoder, titledDecoder
+@docs MdContent, mdContentEncoder, mdContentDecoder
+@docs Panel, panelEncoder, panelDecoder
+@docs Attachment, attachmentEncoder, attachmentDecoder
+@docs Content, contentEncoder, contentDecoder
+@docs Relationship, relationshipEncoder, relationshipDecoder
+@docs ContentType, contentTypeEncoder, contentTypeDecoder
+
+@docs ContentModel, contentModelEncoder, contentModelDecoder        
+-}
+
 import Set exposing (Set)
 import Dict exposing (Dict)
 import Json.Decode as Decode exposing (..)
 import Json.Decode.Extra exposing ((|:), withDefault)
 import Json.Encode as Encode exposing (..)
 import Exts.Maybe exposing (catMaybes)
+{-|
+Describes the PredicateType component type.
+-}
 type PredicateType =
     PredicateType
     {
@@ -13,9 +34,10 @@ type PredicateType =
     , id : Maybe String
     }
 
-unwrapPredicateType (PredicateType predicateType) =
-    predicateType
 
+{-|
+A JSON encoder for the PredicateType type.
+-}        
 predicateTypeEncoder : PredicateType -> Encode.Value
 predicateTypeEncoder (PredicateType model) =
         [
@@ -25,7 +47,9 @@ predicateTypeEncoder (PredicateType model) =
           |> catMaybes
           |> Encode.object
 
-
+{-|
+A JSON decoder for the PredicateType type.
+-}        
 predicateTypeDecoder : Decoder PredicateType
 predicateTypeDecoder =
     (Decode.succeed
@@ -41,11 +65,17 @@ predicateTypeDecoder =
         |: Decode.maybe (field "id" Decode.int |> Decode.map toString)
 
 
+{-|
+Describes the ContentModel view type.
+-}
 type ContentModel =
     TitledAsContentModel Titled
     | MdContentAsContentModel MdContent
     | PanelAsContentModel Panel
 
+{-|
+A JSON encoder for the ContentModel type.
+-}
 contentModelEncoder : ContentModel -> Encode.Value
 contentModelEncoder model =
   case model of
@@ -53,6 +83,9 @@ contentModelEncoder model =
     MdContentAsContentModel mdContent -> mdContentEncoder mdContent
     PanelAsContentModel panel -> panelEncoder panel
 
+{-|
+A JSON decoder for the ContentModel type.
+-}
 contentModelDecoder : Decoder ContentModel
 contentModelDecoder =
   let
@@ -68,15 +101,19 @@ contentModelDecoder =
 
 
 
+{-|
+Describes the Base component type.
+-}
 type Base =
     Base
     {
     lastUpdated : Maybe String
     }
 
-unwrapBase (Base base) =
-    base
 
+{-|
+A JSON encoder for the Base type.
+-}        
 baseEncoder : Base -> Encode.Value
 baseEncoder (Base model) =
         [
@@ -85,7 +122,9 @@ baseEncoder (Base model) =
           |> catMaybes
           |> Encode.object
 
-
+{-|
+A JSON decoder for the Base type.
+-}        
 baseDecoder : Decoder Base
 baseDecoder =
     (Decode.succeed
@@ -99,6 +138,9 @@ baseDecoder =
         |: Decode.maybe (field "lastUpdated" Decode.string)
 
 
+{-|
+Describes the Titled component type.
+-}
 type Titled =
     Titled
     {
@@ -106,9 +148,10 @@ type Titled =
     , title : String
     }
 
-unwrapTitled (Titled titled) =
-    titled
 
+{-|
+A JSON encoder for the Titled type.
+-}        
 titledEncoder : Titled -> Encode.Value
 titledEncoder (Titled model) =
         [
@@ -119,7 +162,9 @@ titledEncoder (Titled model) =
           |> catMaybes
           |> Encode.object
 
-
+{-|
+A JSON decoder for the Titled type.
+-}        
 titledDecoder : Decoder Titled
 titledDecoder =
     (Decode.succeed
@@ -135,6 +180,9 @@ titledDecoder =
         |: field "title" Decode.string
 
 
+{-|
+Describes the MdContent component type.
+-}
 type MdContent =
     MdContent
     {
@@ -142,9 +190,10 @@ type MdContent =
     , markdown : String
     }
 
-unwrapMdContent (MdContent mdContent) =
-    mdContent
 
+{-|
+A JSON encoder for the MdContent type.
+-}        
 mdContentEncoder : MdContent -> Encode.Value
 mdContentEncoder (MdContent model) =
         [
@@ -155,7 +204,9 @@ mdContentEncoder (MdContent model) =
           |> catMaybes
           |> Encode.object
 
-
+{-|
+A JSON decoder for the MdContent type.
+-}        
 mdContentDecoder : Decoder MdContent
 mdContentDecoder =
     (Decode.succeed
@@ -171,6 +222,9 @@ mdContentDecoder =
         |: field "markdown" Decode.string
 
 
+{-|
+Describes the Panel component type.
+-}
 type Panel =
     Panel
     {
@@ -180,9 +234,10 @@ type Panel =
     , imageId : Maybe String
     }
 
-unwrapPanel (Panel panel) =
-    panel
 
+{-|
+A JSON encoder for the Panel type.
+-}        
 panelEncoder : Panel -> Encode.Value
 panelEncoder (Panel model) =
         [
@@ -195,7 +250,9 @@ panelEncoder (Panel model) =
           |> catMaybes
           |> Encode.object
 
-
+{-|
+A JSON decoder for the Panel type.
+-}        
 panelDecoder : Decoder Panel
 panelDecoder =
     (Decode.succeed
@@ -215,6 +272,9 @@ panelDecoder =
         |: Decode.maybe (field "imageId" Decode.string)
 
 
+{-|
+Describes the Attachment component type.
+-}
 type Attachment =
     Attachment
     {
@@ -225,9 +285,10 @@ type Attachment =
     , id : Maybe String
     }
 
-unwrapAttachment (Attachment attachment) =
-    attachment
 
+{-|
+A JSON encoder for the Attachment type.
+-}        
 attachmentEncoder : Attachment -> Encode.Value
 attachmentEncoder (Attachment model) =
         [
@@ -240,7 +301,9 @@ attachmentEncoder (Attachment model) =
           |> catMaybes
           |> Encode.object
 
-
+{-|
+A JSON decoder for the Attachment type.
+-}        
 attachmentDecoder : Decoder Attachment
 attachmentDecoder =
     (Decode.succeed
@@ -262,6 +325,9 @@ attachmentDecoder =
         |: Decode.maybe (field "id" Decode.int |> Decode.map toString)
 
 
+{-|
+Describes the Content component type.
+-}
 type Content =
     Content
     {
@@ -274,9 +340,10 @@ type Content =
     , id : Maybe String
     }
 
-unwrapContent (Content content) =
-    content
 
+{-|
+A JSON encoder for the Content type.
+-}        
 contentEncoder : Content -> Encode.Value
 contentEncoder (Content model) =
         [
@@ -291,7 +358,9 @@ contentEncoder (Content model) =
           |> catMaybes
           |> Encode.object
 
-
+{-|
+A JSON decoder for the Content type.
+-}        
 contentDecoder : Decoder Content
 contentDecoder =
     (Decode.succeed
@@ -317,6 +386,9 @@ contentDecoder =
         |: Decode.maybe (field "id" Decode.int |> Decode.map toString)
 
 
+{-|
+Describes the Relationship component type.
+-}
 type Relationship =
     Relationship
     {
@@ -326,9 +398,10 @@ type Relationship =
     , id : Maybe String
     }
 
-unwrapRelationship (Relationship relationship) =
-    relationship
 
+{-|
+A JSON encoder for the Relationship type.
+-}        
 relationshipEncoder : Relationship -> Encode.Value
 relationshipEncoder (Relationship model) =
         [
@@ -340,7 +413,9 @@ relationshipEncoder (Relationship model) =
           |> catMaybes
           |> Encode.object
 
-
+{-|
+A JSON decoder for the Relationship type.
+-}        
 relationshipDecoder : Decoder Relationship
 relationshipDecoder =
     (Decode.succeed
@@ -360,6 +435,9 @@ relationshipDecoder =
         |: Decode.maybe (field "id" Decode.int |> Decode.map toString)
 
 
+{-|
+Describes the ContentType component type.
+-}
 type ContentType =
     ContentType
     {
@@ -369,9 +447,10 @@ type ContentType =
     , id : Maybe String
     }
 
-unwrapContentType (ContentType contentType) =
-    contentType
 
+{-|
+A JSON encoder for the ContentType type.
+-}        
 contentTypeEncoder : ContentType -> Encode.Value
 contentTypeEncoder (ContentType model) =
         [
@@ -383,7 +462,9 @@ contentTypeEncoder (ContentType model) =
           |> catMaybes
           |> Encode.object
 
-
+{-|
+A JSON decoder for the ContentType type.
+-}        
 contentTypeDecoder : Decoder ContentType
 contentTypeDecoder =
     (Decode.succeed
