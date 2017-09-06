@@ -20,7 +20,7 @@
         "elm-lang/core": "5.0.0 <= v < 6.0.0",
         "elm-lang/html": "2.0.0 <= v < 3.0.0",
         "elm-lang/http": "1.0.0 <= v < 2.0.0",
-        "evancz/elm-markdown" : "3.0.1 <= v < 4.0.0",
+        "pablohirafuji/elm-markdown": "2.0.4 <= v < 3.0.0",
         "rgrempel/elm-http-decorators": "2.0.0 <= v < 3.0.0",
         "elm-community/json-extra": "2.0.0 <= v < 3.0.0",
         "krisajenkins/elm-exts": "26.1.0 <= v < 27.0.0",

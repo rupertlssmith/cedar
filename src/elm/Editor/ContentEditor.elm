@@ -1271,11 +1271,11 @@ editor mode zipper =
 
         markdownView : ContentModel -> Html Msg
         markdownView contentModel =
-            Markdown.toHtml
-                [ domMetricsOn (MouseOverContent zipper) "mouseover"
-                ]
-            <|
-                asMarkdown contentModel
+            asMarkdown contentModel
+                |> Markdown.toHtml Nothing
+                |> Html.div
+                    [ domMetricsOn (MouseOverContent zipper) "mouseover"
+                    ]
 
         defaultContent =
             markdownView contentModel
