@@ -14,8 +14,8 @@ import MultiwayTreeZipper as Zipper exposing (Zipper)
 
 
 {-| Applies an update function to the node under the zipper, then
- walks back up to the root of the tree, to produce a new tree with
- the update applied to the designated node.
+walks back up to the root of the tree, to produce a new tree with
+the update applied to the designated node.
 -}
 updateTree : (a -> a) -> Zipper a -> Maybe (Tree a)
 updateTree update zipper =

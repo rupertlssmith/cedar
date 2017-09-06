@@ -20,30 +20,27 @@ boolToMaybe filter val =
         Nothing
 
 
-{-|
- Both functions must succeed to get a result. If either fails with Nothing,
- then the result will be Nothing
+{-| Both functions must succeed to get a result. If either fails with Nothing,
+then the result will be Nothing
 -}
 (>&&>) : (a -> Maybe b) -> (b -> Maybe c) -> a -> Maybe c
 (>&&>) fst snd val =
     fst val |> andThen snd
 
 
-{-|
- The resutl will be the second function, iff the first function produces Nothing.
+{-| The resutl will be the second function, iff the first function produces Nothing.
 -}
 (>||>) : (a -> Maybe b) -> (a -> Maybe b) -> a -> Maybe b
 (>||>) fst snd val =
     fst val |> orElse (snd val)
 
 
-{-|
- The functions are applied one after the other.
- If the first function produces Nothing the original input will be given to the second function.
- If the first function produces Just someValue, that value will be given to the second function.
- If the second function fails with Nothing, the output will be whatever the first function output.
- This skips over operations that fail, passing the operand down the chain to try it with successive
- functions.
+{-| The functions are applied one after the other.
+If the first function produces Nothing the original input will be given to the second function.
+If the first function produces Just someValue, that value will be given to the second function.
+If the second function fails with Nothing, the output will be whatever the first function output.
+This skips over operations that fail, passing the operand down the chain to try it with successive
+functions.
 -}
 (>##>) : (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
 (>##>) fst snd val =

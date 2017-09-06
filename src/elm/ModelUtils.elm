@@ -1,16 +1,15 @@
 module ModelUtils exposing (asMarkdown, withMarkdown, asUUID)
 
-{-|
-ModelUtils provides some helper functions for working with the content model.
+{-| ModelUtils provides some helper functions for working with the content model.
 
 @docs asMarkdown, withMarkdown, asUUID
+
 -}
 
 import Model exposing (ContentModel(..), Panel(..), Titled(..), MdContent(..))
 
 
-{-|
-Extracts the markdown from a content model.
+{-| Extracts the markdown from a content model.
 -}
 asMarkdown : ContentModel -> String
 asMarkdown model =
@@ -25,8 +24,7 @@ asMarkdown model =
             ""
 
 
-{-|
-Updates a content model with replacement markdown.
+{-| Updates a content model with replacement markdown.
 -}
 withMarkdown : ContentModel -> String -> ContentModel
 withMarkdown model newValue =
@@ -41,8 +39,7 @@ withMarkdown model newValue =
             other
 
 
-{-|
-Extracts the UUID from a content model.
+{-| Extracts the UUID from a content model.
 -}
 asUUID : ContentModel -> String
 asUUID model =

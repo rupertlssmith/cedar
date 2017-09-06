@@ -10,12 +10,9 @@ import Material.Grid as Grid
 import Material.Dialog as Dialog
 
 
-{-
-   A grid cell that is 6 columns on dektop and 4 on tablet and mobile. This
-   provides a 2 column layout, shrinking to 1 on mobile.
+{-| A grid cell that is 6 columns on dektop and 4 on tablet and mobile. This
+provides a 2 column layout, shrinking to 1 on mobile.
 -}
-
-
 column644 : List (Html msg) -> Grid.Cell msg
 column644 =
     Grid.cell
@@ -25,12 +22,8 @@ column644 =
         ]
 
 
-
-{-
-   A grid cell that is full width on all devices.
+{-| A grid cell that is full width on all devices.
 -}
-
-
 columnAll12 : List (Html msg) -> Grid.Cell msg
 columnAll12 =
     Grid.cell
@@ -38,15 +31,13 @@ columnAll12 =
         ]
 
 
+{-| Builds a ripple effect button used for completing some user input.
 
-{-
-   Builds a ripple effect button used for completing some user input.
-   - The button displays the specified label.
-   - The button is disabled when the isValid indicator is false.
-   - The specified msg is triggered when the button is clicked.
+  - The button displays the specified label.
+  - The button is disabled when the isValid indicator is false.
+  - The specified msg is triggered when the button is clicked.
+
 -}
-
-
 completeButton : Material.Model -> (Material.Msg msg -> msg) -> String -> Bool -> msg -> Html msg
 completeButton model mdl label isValid msg =
     Button.render mdl
@@ -62,15 +53,13 @@ completeButton model mdl label isValid msg =
         [ text label ]
 
 
+{-| Builds a ripple effect button used for cancelling some user input.
 
-{-
-   Builds a ripple effect button used for cancelling some user input.
-   - The button displays the specified label.
-   - The button is disabled when the isValid indicator is false.
-   - The specified msg is triggered when the button is clicked.
+  - The button displays the specified label.
+  - The button is disabled when the isValid indicator is false.
+  - The specified msg is triggered when the button is clicked.
+
 -}
-
-
 cancelButton : Material.Model -> (Material.Msg msg -> msg) -> String -> msg -> Html msg
 cancelButton model mdl label msg =
     Button.render mdl
@@ -85,15 +74,11 @@ cancelButton model mdl label msg =
         ]
 
 
-
-{-
-   Builds a control bar with _ok_ and _cancel_ actions.
-    - The ok action is specified as button.
-    - The cancel action is specified as a msg to trigger on the cancel button
-      click.
+{-| Builds a control bar with *ok* and *cancel* actions.
+- The ok action is specified as button.
+- The cancel action is specified as a msg to trigger on the cancel button
+click.
 -}
-
-
 okCancelControlBar : Material.Model -> (Material.Msg msg -> msg) -> Html msg -> Html msg -> Html msg
 okCancelControlBar model mdl okButton cancelButton =
     div [ class "control-bar" ]

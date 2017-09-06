@@ -10,10 +10,10 @@ module Client.Top
         , Msg
         )
 
-{-|
-The content editor client top module.
+{-| The content editor client top module.
 
 @docs delta2url, location2messages, init, update, subscriptions, view, Model, Msg
+
 -}
 
 import Dict exposing (Dict)
@@ -161,8 +161,7 @@ toAuthenticated contentEditor session =
             Nothing
 
 
-{-|
-The content editor program model.
+{-| The content editor program model.
 -}
 type alias Model =
     { auth : AuthController.Model
@@ -170,8 +169,7 @@ type alias Model =
     }
 
 
-{-|
-The content editor program top-level message types.
+{-| The content editor program top-level message types.
 -}
 type Msg
     = AuthMsg AuthController.Msg
@@ -183,8 +181,7 @@ type Msg
 -- Initialization
 
 
-{-|
-Initiales the application state by setting it to the 'Initial' state. Requests
+{-| Initiales the application state by setting it to the 'Initial' state. Requests
 that an Auth refreshed be performed to check what the current authentication
 state is.
 -}
@@ -193,7 +190,8 @@ init =
     ( { auth = setLoginLocations AuthController.init
       , session =
             Initial
-            --Welcome { welcome = Welcome.Auth.init }
+
+      --Welcome { welcome = Welcome.Auth.init }
       }
     , Auth.refresh
     )
@@ -207,8 +205,7 @@ setLoginLocations authState =
 -- Subscriptions
 
 
-{-|
-Sets up the subscriptions for the content editor.
+{-| Sets up the subscriptions for the content editor.
 -}
 subscriptions : ResizeObserver.Resize -> ScrollPort.Scroll -> Model -> Sub Msg
 subscriptions resize scroll model =
@@ -229,8 +226,7 @@ subscriptions resize scroll model =
 -- Navigation
 
 
-{-|
-Sets the navigation bar location dependant on the state of the model.
+{-| Sets the navigation bar location dependant on the state of the model.
 -}
 delta2url : Model -> Model -> Maybe Routing.UrlChange
 delta2url _ model =
@@ -257,8 +253,7 @@ delta2url _ model =
             CE.delta2url contentEditor contentEditor
 
 
-{-|
-Process naviagation bar location changes.
+{-| Process naviagation bar location changes.
 -}
 location2messages : Navigation.Location -> List Msg
 location2messages location =
@@ -285,8 +280,7 @@ debugFilter msg =
             Debug.log "main" msg
 
 
-{-|
-Processes state updates for the content editor.
+{-| Processes state updates for the content editor.
 -}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
@@ -383,8 +377,7 @@ updateContentEditorMsg msg model =
 -- View
 
 
-{-|
-Top level view function for the content editor SPA.
+{-| Top level view function for the content editor SPA.
 -}
 view :
     Dict String (Layout CE.Msg)

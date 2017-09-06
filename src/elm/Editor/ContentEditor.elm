@@ -674,8 +674,7 @@ update action model =
             ( model, Auth.logout )
 
 
-{-|
- Update animations when animated styles are available.
+{-| Update animations when animated styles are available.
 -}
 updateAnimate : Animation.Msg -> Model -> ( Model, Cmd Msg )
 updateAnimate msg model =
@@ -709,28 +708,25 @@ updateAnimate msg model =
         )
 
 
-{-|
- Forward on the content service messages to it.
+{-| Forward on the content service messages to it.
 -}
 updateCSEApi : CSE.Msg -> Model -> ( Model, Cmd Msg )
 updateCSEApi cseMsg model =
     (CSE.update cseCallbacks cseMsg model)
 
 
-{-|
- Forward on the content service messages to it.
+{-| Forward on the content service messages to it.
 -}
 updateContentServiceApi : Content.Service.Msg -> Model -> ( Model, Cmd Msg )
 updateContentServiceApi msg model =
     (Content.Service.update csCallbacks msg model)
 
 
-{-|
- Forward on the overlay msg to get an update from it.
- Respond to any out messages from the overlay that need attention:
-   If it is Closed, then switch to the Explore mode,
-     and detach the resize observer from the content model.
-   If it is a mode selection then switch and animate to the selected mode.
+{-| Forward on the overlay msg to get an update from it.
+Respond to any out messages from the overlay that need attention:
+If it is Closed, then switch to the Explore mode,
+and detach the resize observer from the content model.
+If it is a mode selection then switch and animate to the selected mode.
 -}
 updateOverlayMsg : Overlay.Msg -> Model -> ( Model, Cmd Msg )
 updateOverlayMsg msg model =
@@ -738,7 +734,7 @@ updateOverlayMsg msg model =
         switchMode : Maybe Overlay.OutMsg -> Mode -> Maybe Mode
         switchMode outmsg mode =
             case outmsg of
-                Just (Overlay.Closed) ->
+                Just Overlay.Closed ->
                     mapWhenWithContent (\content -> toExplore content mode) mode
 
                 Just (Overlay.SelectMode "markdown") ->
@@ -886,9 +882,8 @@ updateOverlayMsg msg model =
                 ( model, Cmd.none )
 
 
-{-|
- Fetch the content by its slug.
- Fetch the content tree.
+{-| Fetch the content by its slug.
+Fetch the content tree.
 -}
 updateInit : Model -> ( Model, Cmd Msg )
 updateInit model =
@@ -905,11 +900,10 @@ updateSelectLocation location model =
     ( model, CSE.invokeRetrieveWithContainerBySlug model.config.apiRoot CSEApi location )
 
 
-{-|
- When in explore mode,
- switch to markdown mode with the content model
- and an overlay in the Aware state.
- Ask the resize observer to observe the content under the mouse.
+{-| When in explore mode,
+switch to markdown mode with the content model
+and an overlay in the Aware state.
+Ask the resize observer to observe the content under the mouse.
 -}
 updateMouseOverContent : Zipper Content -> DOMState -> Model -> ( Model, Cmd Msg )
 updateMouseOverContent zipper domState model =
@@ -942,9 +936,8 @@ updateMouseOutContent model =
     )
 
 
-{-|
- When there is a selected content model with an overlay,
- forward changes in the content models rendered size to the overlay.
+{-| When there is a selected content model with an overlay,
+forward changes in the content models rendered size to the overlay.
 -}
 updateResize : ResizeEvent -> Model -> ( Model, Cmd Msg )
 updateResize size model =
@@ -1323,11 +1316,12 @@ editor mode zipper =
         div
             attributes
             [ htmlContent
-              -- This is where the inline editor must go.
-              -- , div
-              --     (Animation.render model.inlineEditorStyle
-              --         ++ [ class "editor-inline__editor" ]
-              --     )
-              --     [ content
-              --     ]
+
+            -- This is where the inline editor must go.
+            -- , div
+            --     (Animation.render model.inlineEditorStyle
+            --         ++ [ class "editor-inline__editor" ]
+            --     )
+            --     [ content
+            --     ]
             ]
