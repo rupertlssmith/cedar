@@ -1,7 +1,7 @@
 {
     "version": "0.8.2",
-    "summary": "Example of Html rendering with Elm.",
-    "repository": "https://github.com/rupertlssmith/elm-java.git",
+    "summary": "A Content Editor UI.",
+    "repository": "https://github.com/rupertlssmith/cedar.git",
     "license": "BSD3",
     "source-directories": [
         "src/elm",

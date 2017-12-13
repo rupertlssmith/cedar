@@ -1,7 +1,7 @@
 {
     "version": "1.0.0-SNAPSHOT",
-    "name": "auth_web_ui",
-    "description": "UI for authentication server.",
+    "name": "cedar",
+    "description": "UI for Content Editor.",
     "devDependencies": {
         "karma": "^0.12.16",
         "karma-chrome-launcher": "^0.1.4",

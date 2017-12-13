@@ -1,1 +1,1 @@
-Ceder is a content editor in Elm.
+Cedar is an experimental content editor in Elm.
