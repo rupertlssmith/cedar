@@ -33,132 +33,20 @@ import Auth
 import Maybe.Extra
 import ResizeObserver
 import ScrollPort
-
-
-type Session
-    = Initial
-    | Welcome WithWelcome
-    | FailedAuth WithWelcome
-    | Authenticated WithContentEditor
-
-
-type alias WithWelcome =
-    { welcome : Welcome.Auth.Model }
-
-
-type alias WithContentEditor =
-    { contentEditor : CE.Model }
-
-
-maybeInitial : Session -> Maybe Session
-maybeInitial session =
-    case session of
-        Initial ->
-            Just session
-
-        _ ->
-            Nothing
-
-
-maybeWelcome : Session -> Maybe Session
-maybeWelcome session =
-    case session of
-        Welcome _ ->
-            Just session
-
-        _ ->
-            Nothing
-
-
-maybeFailedAuth : Session -> Maybe Session
-maybeFailedAuth session =
-    case session of
-        FailedAuth _ ->
-            Just session
-
-        _ ->
-            Nothing
-
-
-maybeAuthenticated : Session -> Maybe Session
-maybeAuthenticated session =
-    case session of
-        Authenticated _ ->
-            Just session
-
-        _ ->
-            Nothing
-
-
-mapWhenWithWelcome : (WithWelcome -> a) -> Session -> Maybe a
-mapWhenWithWelcome func session =
-    case session of
-        Welcome welcome ->
-            Just <| func welcome
-
-        FailedAuth welcome ->
-            Just <| func welcome
-
-        _ ->
-            Nothing
-
-
-mapWhenWithContentEditor : (WithContentEditor -> a) -> Session -> Maybe a
-mapWhenWithContentEditor func session =
-    case session of
-        Authenticated editor ->
-            Just <| func editor
-
-        _ ->
-            Nothing
-
-
-updateWhenWithWelcome : (WithWelcome -> WithWelcome) -> Session -> Maybe Session
-updateWhenWithWelcome func session =
-    case session of
-        Welcome welcome ->
-            func welcome |> Welcome |> Just
-
-        FailedAuth welcome ->
-            func welcome |> FailedAuth |> Just
-
-        _ ->
-            Nothing
-
-
-updateWhenWithContentEditor : (WithContentEditor -> WithContentEditor) -> Session -> Maybe Session
-updateWhenWithContentEditor func session =
-    case session of
-        Authenticated editor ->
-            func editor |> Authenticated |> Just
-
-        _ ->
-            Nothing
-
-
-toWelcome : WithWelcome -> Session -> Session
-toWelcome welcome _ =
-    Welcome welcome
-
-
-toFailedAuth : Session -> Maybe Session
-toFailedAuth session =
-    case session of
-        Welcome welcome ->
-            FailedAuth welcome |> Just
-
-        _ ->
-            Nothing
-
-
-toAuthenticated : WithContentEditor -> Session -> Maybe Session
-toAuthenticated contentEditor session =
-    case session of
-        Welcome _ ->
-            Authenticated contentEditor |> Just
-
-        _ ->
-            Nothing
+import Client.TopState as TopState
+    exposing
+        ( Session(..)
+        , WithWelcome
+        , WithContentEditor
+        , initial
+        , toWelcomeWithWelcome
+        , toWelcome
+        , toFailedAuth
+        , toAuthenticatedWithContentEditor
+        , updateWelcome
+        , updateContentEditor
+        )
+import StateMachine exposing (State)
 
 
 {-| The content editor program model.
@@ -188,10 +76,7 @@ state is.
 init : ( Model, Cmd Msg )
 init =
     ( { auth = setLoginLocations AuthController.init
-      , session =
-            Initial
-
-      --Welcome { welcome = Welcome.Auth.init }
+      , session = initial
       }
     , Auth.refresh
     )
@@ -212,12 +97,14 @@ subscriptions resize scroll model =
     Sub.batch
         (optional
             [ Sub.map AuthMsg (AuthController.subscriptions model.auth) |> required
-            , mapWhenWithContentEditor
-                (\{ contentEditor } ->
-                    CE.subscriptions resize scroll contentEditor
+            , case model.session of
+                Authenticated state ->
+                    CE.subscriptions resize scroll (TopState.untag state).contentEditor
                         |> Sub.map ContentEditorMsg
-                )
-                model.session
+                        |> Just
+
+                _ ->
+                    Nothing
             ]
         )
 
@@ -231,7 +118,7 @@ subscriptions resize scroll model =
 delta2url : Model -> Model -> Maybe Routing.UrlChange
 delta2url _ model =
     case model.session of
-        Initial ->
+        Initial _ ->
             { entry = Routing.NewEntry
             , url = ""
             }
@@ -249,8 +136,9 @@ delta2url _ model =
             }
                 |> Just
 
-        Authenticated { contentEditor } ->
-            CE.delta2url contentEditor contentEditor
+        Authenticated state ->
+            CE.delta2url (TopState.untag state).contentEditor
+                (TopState.untag state).contentEditor
 
 
 {-| Process naviagation bar location changes.
@@ -284,15 +172,33 @@ debugFilter msg =
 -}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
-    case (debugFilter action) of
-        AuthMsg msg ->
+    case ( model.session, (debugFilter action) ) of
+        ( _, AuthMsg msg ) ->
             updateAuthMsg msg model
 
-        WelcomeMsg msg ->
-            updateWelcomeMsg msg model
+        ( Welcome state, WelcomeMsg msg ) ->
+            let
+                ( newState, cmdMsgs ) =
+                    updateWelcomeMsg msg state
+            in
+                ( { model | session = Welcome newState }, cmdMsgs )
 
-        ContentEditorMsg msg ->
-            updateContentEditorMsg msg model
+        ( FailedAuth state, WelcomeMsg msg ) ->
+            let
+                ( newState, cmdMsgs ) =
+                    updateWelcomeMsg msg state
+            in
+                ( { model | session = FailedAuth newState }, cmdMsgs )
+
+        ( Authenticated state, ContentEditorMsg msg ) ->
+            let
+                ( newState, cmdMsgs ) =
+                    updateContentEditorMsg msg state
+            in
+                ( { model | session = Authenticated newState }, cmdMsgs )
+
+        ( _, _ ) ->
+            ( model, Cmd.none )
 
 
 updateAuthMsg : AuthController.Msg -> Model -> ( Model, Cmd Msg )
@@ -301,7 +207,7 @@ updateAuthMsg msg model =
         ( authUpdatedModel, authUpdateCmds ) =
             lift .auth (\m x -> { m | auth = x }) AuthMsg AuthController.update msg model
 
-        authenticated =
+        isAuthenticated =
             AuthController.isLoggedIn authUpdatedModel.auth.authState
 
         logonAttempted =
@@ -311,66 +217,55 @@ updateAuthMsg msg model =
             AuthController.hasPermission "content-author" authUpdatedModel.auth.authState
 
         ( session, initCmds ) =
-            if authenticated && hasPermission then
-                let
-                    ( contentEditor, editorInitCmds ) =
-                        CE.init config authUpdatedModel.auth.authState.username
-                in
-                    ( Authenticated { contentEditor = contentEditor }
-                    , editorInitCmds |> Cmd.map ContentEditorMsg
-                    )
-            else if authenticated && not hasPermission then
-                ( FailedAuth { welcome = Welcome.Auth.init }, Cmd.none )
-            else if not authenticated && logonAttempted then
-                ( FailedAuth { welcome = Welcome.Auth.init }, Cmd.none )
+            case ( model.session, isAuthenticated, hasPermission, logonAttempted ) of
+                ( Welcome state, True, True, _ ) ->
+                    let
+                        ( contentEditor, editorInitCmds ) =
+                            CE.init config authUpdatedModel.auth.authState.username
+                    in
+                        ( toAuthenticatedWithContentEditor { contentEditor = contentEditor } state
+                        , editorInitCmds |> Cmd.map ContentEditorMsg
+                        )
+
+                ( Welcome state, True, False, _ ) ->
+                    ( toFailedAuth state, Cmd.none )
+
+                ( Welcome state, False, _, True ) ->
+                    ( toFailedAuth state, Cmd.none )
+
                 -- else if not refreshAttempted then
                 --     ( Initial, Cmd.none )
-            else
-                ( Welcome { welcome = Welcome.Auth.init }, Cmd.none )
+                ( FailedAuth state, _, _, _ ) ->
+                    ( toWelcome state, Cmd.none )
+
+                ( Initial state, _, _, _ ) ->
+                    ( toWelcomeWithWelcome { welcome = Welcome.Auth.init } state, Cmd.none )
+
+                ( Authenticated state, _, _, _ ) ->
+                    ( toWelcomeWithWelcome { welcome = Welcome.Auth.init } state, Cmd.none )
+
+                ( _, _, _, _ ) ->
+                    ( model.session, Cmd.none )
     in
         ( { authUpdatedModel | session = session }, Cmd.batch [ authUpdateCmds, initCmds ] )
 
 
-updateWelcomeMsg : Welcome.Auth.Msg -> Model -> ( Model, Cmd Msg )
-updateWelcomeMsg msg model =
-    let
-        maybeUpdate =
-            mapWhenWithWelcome (\{ welcome } -> Welcome.Auth.update msg welcome)
-                model.session
-    in
-        case maybeUpdate of
-            Just ( welcome, cmd ) ->
-                ( { model
-                    | session =
-                        updateWhenWithWelcome (\withWelcome -> { withWelcome | welcome = welcome })
-                            |> defaultTransition model.session
-                  }
-                , Cmd.map WelcomeMsg cmd
-                )
-
-            Nothing ->
-                ( model, Cmd.none )
+updateWelcomeMsg : Welcome.Auth.Msg -> State t WithWelcome -> ( State t WithWelcome, Cmd Msg )
+updateWelcomeMsg msg state =
+    case Welcome.Auth.update msg (TopState.untag state).welcome of
+        ( welcome, cmd ) ->
+            ( updateWelcome (always { welcome = welcome }) state
+            , Cmd.map WelcomeMsg cmd
+            )
 
 
-updateContentEditorMsg : CE.Msg -> Model -> ( Model, Cmd Msg )
-updateContentEditorMsg msg model =
-    let
-        maybeUpdate =
-            mapWhenWithContentEditor (\{ contentEditor } -> CE.update msg contentEditor)
-                model.session
-    in
-        case maybeUpdate of
-            Just ( contentEditor, cmd ) ->
-                ( { model
-                    | session =
-                        updateWhenWithContentEditor (\withContentEditor -> { withContentEditor | contentEditor = contentEditor })
-                            |> defaultTransition model.session
-                  }
-                , Cmd.map ContentEditorMsg cmd
-                )
-
-            Nothing ->
-                ( model, Cmd.none )
+updateContentEditorMsg : CE.Msg -> State t WithContentEditor -> ( State t WithContentEditor, Cmd Msg )
+updateContentEditorMsg msg state =
+    case CE.update msg (TopState.untag state).contentEditor of
+        ( contentEditor, cmd ) ->
+            ( updateContentEditor (always { contentEditor = contentEditor }) state
+            , Cmd.map ContentEditorMsg cmd
+            )
 
 
 
@@ -386,14 +281,14 @@ view :
     -> Html Msg
 view layouts templates model =
     case model.session of
-        Initial ->
+        Initial _ ->
             Html.div [] []
 
-        Welcome { welcome } ->
-            Welcome.Auth.loginView welcome |> Html.map WelcomeMsg
+        Welcome state ->
+            Welcome.Auth.loginView (TopState.untag state).welcome |> Html.map WelcomeMsg
 
-        FailedAuth { welcome } ->
-            Welcome.Auth.notPermittedView welcome |> Html.map WelcomeMsg
+        FailedAuth state ->
+            Welcome.Auth.notPermittedView (TopState.untag state).welcome |> Html.map WelcomeMsg
 
-        Authenticated { contentEditor } ->
-            CE.view layouts templates contentEditor |> Html.map ContentEditorMsg
+        Authenticated state ->
+            CE.view layouts templates (TopState.untag state).contentEditor |> Html.map ContentEditorMsg
