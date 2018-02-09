@@ -20,7 +20,6 @@ import Dict exposing (Dict)
 import Renderer.Flexi exposing (Layout, Template)
 import RouteUrl as Routing
 import Editor.ContentEditor as CE
-import TimeTravel.Navigation as TimeTravel
 import AuthController
 import Welcome.Auth
 import Utils exposing (lift)
