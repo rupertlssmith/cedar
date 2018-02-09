@@ -16,22 +16,8 @@ module Client.Top
 
 -}
 
-import Dict exposing (Dict)
-import Renderer.Flexi exposing (Layout, Template)
-import RouteUrl as Routing
-import Editor.ContentEditor as CE
-import AuthController
-import Welcome.Auth
-import Utils exposing (lift)
-import StateModel exposing (boolToMaybe, (>&&>), (>||>), (>##>), defaultTransition, mapWhenCompose)
-import Navigation
-import Optional exposing (optional, required, when)
-import Html exposing (Html)
-import Config exposing (config)
 import Auth
-import Maybe.Extra
-import ResizeObserver
-import ScrollPort
+import AuthController
 import Client.TopState as TopState
     exposing
         ( Session(..)
@@ -45,7 +31,21 @@ import Client.TopState as TopState
         , updateWelcome
         , updateContentEditor
         )
+import Config exposing (config)
+import Dict exposing (Dict)
+import Editor.ContentEditor as CE
+import Html exposing (Html)
+import Maybe.Extra
+import Navigation
+import Optional exposing (optional, required, when)
+import Renderer.Flexi exposing (Layout, Template)
+import ResizeObserver
+import RouteUrl as Routing
+import ScrollPort
 import StateMachine exposing (State)
+import StateModel exposing (boolToMaybe, (>&&>), (>||>), (>##>), defaultTransition, mapWhenCompose)
+import Utils exposing (lift)
+import Welcome.Auth
 
 
 {-| The content editor program model.

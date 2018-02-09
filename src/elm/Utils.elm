@@ -1,13 +1,13 @@
 module Utils exposing (error, message, Update, lift)
 
+import Auth
 import Dict exposing (Dict)
-import Set exposing (Set)
+import Http
+import List
 import Maybe
 import Maybe.Extra exposing (isJust)
-import List
-import Http
+import Set exposing (Set)
 import Task
-import Auth
 
 
 {-| Combines a list of unary tests on some model into a single unary test on the

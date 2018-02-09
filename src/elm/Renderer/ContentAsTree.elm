@@ -6,10 +6,10 @@ module Renderer.ContentAsTree
         )
 
 import Maybe.Extra exposing (unwrap)
+import Model exposing (Content(Content), Relationship(Relationship), ContentModel)
 import MultiwayTree as Tree exposing (Tree(..))
 import MultiwayTreeZipper as Zipper exposing (Zipper)
 import TreeUtils exposing (updateTree, (&>))
-import Model exposing (Content(Content), Relationship(Relationship), ContentModel)
 
 
 contentRelationshipsToTree : (Content -> a) -> Content -> Tree a

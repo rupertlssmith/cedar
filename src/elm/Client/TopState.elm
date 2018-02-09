@@ -14,8 +14,8 @@ module Client.TopState
         )
 
 import Editor.ContentEditor as CE
-import Welcome.Auth
 import StateMachine exposing (State(..), Allowed)
+import Welcome.Auth
 
 
 type alias WithWelcome =

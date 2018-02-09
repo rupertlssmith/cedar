@@ -9,20 +9,20 @@ module Editor.ContentTree
         , view
         )
 
-import Maybe.Extra exposing (unwrap)
 import Animation exposing (px, percent, Property, Interpolation, State)
 import AnimationUtil exposing (animateStyle)
-import Time exposing (second, Time)
 import Ease
-import MultiwayTree as Tree exposing (Tree(..))
-import MultiwayTreeZipper as Zipper exposing (Zipper)
-import TreeUtils exposing (updateTree, (&>))
-import Html exposing (Html, div, li, ul, i, text, span)
+import Editor.ControlBar as ControlBar
 import Html.Attributes exposing (class, href)
 import Html.Events as Events
+import Html exposing (Html, div, li, ul, i, text, span)
+import Maybe.Extra exposing (unwrap)
 import Model exposing (Content(Content), Relationship(Relationship))
-import Editor.ControlBar as ControlBar
+import MultiwayTree as Tree exposing (Tree(..))
+import MultiwayTreeZipper as Zipper exposing (Zipper)
 import Renderer.ContentAsTree exposing (contentRelationshipsToTree)
+import Time exposing (second, Time)
+import TreeUtils exposing (updateTree, (&>))
 
 
 -- Data model

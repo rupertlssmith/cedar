@@ -10,18 +10,21 @@ module Editor.ContentEditor
         , location2messages
         )
 
-import Dict exposing (Dict)
 import Animation exposing (px, turn, Property, Interpolation, State)
-import Time exposing (second, Time)
-import Ease
-import Color
 import AnimationUtil exposing (animateStyle)
+import Auth
+import Color
+import Config exposing (Config)
+import Content.Service
+import Content.ServiceExtra as CSE
+import Dict exposing (Dict)
 import DOM exposing (Rectangle)
 import DOMUtils exposing (DOMState, domMetricsOn)
-import Content.ServiceExtra as CSE
-import Content.Service
+import Ease
 import Editor.ContentTree as ContentTree
+import Editor.ControlBar as ControlBar
 import Editor.Overlay as Overlay
+import Function exposing (swirll)
 import Html.Attributes exposing (class, id, href, src)
 import Html.Events as Events
 import Html exposing (Html, text, div, button, img)
@@ -30,22 +33,19 @@ import Markdown
 import Maybe.Extra exposing (isJust)
 import Model exposing (Content(..), ContentModel(..))
 import ModelUtils exposing (asMarkdown, asUUID, withMarkdown)
+import MultiwayTree as Tree exposing (Tree(Tree))
+import MultiwayTreeZipper as Zipper exposing (Zipper)
 import Navigation
 import Optional exposing (optional, required, when)
-import RouteUrl as Routing
-import Renderer.Flexi exposing (Editor, LinkBuilder, Layout, Template)
-import Utils exposing (error, message)
-import ResizeObserver exposing (ResizeEvent)
-import ScrollPort exposing (Scroll, Move)
-import Editor.ControlBar as ControlBar
-import Function exposing (swirll)
-import StateModel exposing (boolToMaybe, (>&&>), (>||>), (>##>), defaultTransition, mapWhenCompose)
-import MultiwayTreeZipper as Zipper exposing (Zipper)
-import MultiwayTree as Tree exposing (Tree(Tree))
-import TreeUtils exposing (updateTree)
 import Renderer.ContentAsTree exposing (containerTreeToContent)
-import Auth
-import Config exposing (Config)
+import Renderer.Flexi exposing (Editor, LinkBuilder, Layout, Template)
+import ResizeObserver exposing (ResizeEvent)
+import RouteUrl as Routing
+import ScrollPort exposing (Scroll, Move)
+import StateModel exposing (boolToMaybe, (>&&>), (>||>), (>##>), defaultTransition, mapWhenCompose)
+import Time exposing (second, Time)
+import TreeUtils exposing (updateTree)
+import Utils exposing (error, message)
 
 
 contentZipperToModel : Zipper Content -> ContentModel

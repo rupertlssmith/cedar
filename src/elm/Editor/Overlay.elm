@@ -17,22 +17,22 @@ module Editor.Overlay
 
 import Animation exposing (px, Property, Interpolation)
 import AnimationUtil exposing (animateStyle)
-import Style exposing (StyleSheet)
-import Time exposing (second, Time)
-import Ease
 import Color
+import DOM exposing (Rectangle)
+import Ease
+import Editor.ControlBar as ControlBar
+import Function exposing (swirlr)
 import Html.Attributes exposing (class, href)
 import Html.Events as Events
 import Html exposing (Html, text, div, button, textarea)
-import DOM exposing (Rectangle)
 import Maybe exposing (andThen)
 import Maybe.Extra exposing (isJust, unwrap, orElse, join)
 import Optional exposing (optional, required, when)
 import ResizeObserver exposing (ResizeEvent)
-import Editor.ControlBar as ControlBar
 import ScrollPort exposing (Move)
 import StateModel exposing (boolToMaybe, (>&&>), (>||>), defaultTransition, mapWhenCompose)
-import Function exposing (swirlr)
+import Style exposing (StyleSheet)
+import Time exposing (second, Time)
 
 
 type Msg

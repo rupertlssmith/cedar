@@ -1,9 +1,9 @@
 module DOMUtils exposing (DOMState, domMetricsOn)
 
+import DOM
 import Html exposing (Attribute)
 import Html.Events
 import Json.Decode as Json exposing (field, at)
-import DOM
 
 
 type alias Metrics =
