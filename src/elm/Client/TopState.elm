@@ -3,19 +3,38 @@ module Client.TopState
         ( Session(..)
         , WithWelcome
         , WithContentEditor
+          -- Convenience re-exports from StateMachine
+        , State
+        , Allowed
+        , untag
+          -- Constructors
         , initial
+          -- Map
         , updateWelcome
         , updateContentEditor
+          -- State transitions
         , toWelcome
         , toWelcomeWithWelcome
         , toFailedAuth
         , toAuthenticatedWithContentEditor
-        , untag
         )
 
 import Editor.ContentEditor as CE
 import StateMachine exposing (State(..), Allowed)
 import Welcome.Auth
+
+
+untag : State tag value -> value
+untag =
+    StateMachine.untag
+
+
+type alias State p m =
+    StateMachine.State p m
+
+
+type alias Allowed =
+    StateMachine.Allowed
 
 
 type alias WithWelcome =
@@ -31,11 +50,6 @@ type Session
     | Welcome (State { authenticated : Allowed, failedAuth : Allowed } WithWelcome)
     | FailedAuth (State { welcome : Allowed } WithWelcome)
     | Authenticated (State { welcome : Allowed } WithContentEditor)
-
-
-untag : State tag value -> value
-untag =
-    StateMachine.untag
 
 
 

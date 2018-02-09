@@ -23,6 +23,7 @@ import Client.TopState as TopState
         ( Session(..)
         , WithWelcome
         , WithContentEditor
+        , State
         , initial
         , toWelcomeWithWelcome
         , toWelcome
@@ -42,8 +43,6 @@ import Renderer.Flexi exposing (Layout, Template)
 import ResizeObserver
 import RouteUrl as Routing
 import ScrollPort
-import StateMachine exposing (State)
-import StateModel exposing (boolToMaybe, (>&&>), (>||>), (>##>), defaultTransition, mapWhenCompose)
 import Utils exposing (lift)
 import Welcome.Auth
 
