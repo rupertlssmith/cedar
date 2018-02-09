@@ -74,6 +74,7 @@ type Msg
     | ToggleMenu
     | ControlBar ControlBar.OutMsg
     | LogOut
+    | Error Auth.Msg
 
 
 
@@ -511,7 +512,7 @@ cseCallbacks =
         { default
             | retrieveWithContainerBySlug = contentLoaded
             , retrieveTree = treeFetched
-            , error = error
+            , error = error Error
         }
 
 
@@ -549,7 +550,7 @@ csCallbacks =
     in
         { default
             | update = contentLoaded
-            , error = error
+            , error = error Error
         }
 
 
@@ -672,7 +673,11 @@ update action model =
             updateControlBar outMsg model
 
         LogOut ->
-            ( model, Auth.logout )
+            --( model, Auth.logout )
+            ( model, Cmd.none )
+
+        Error _ ->
+            ( model, Cmd.none )
 
 
 {-| Update animations when animated styles are available.

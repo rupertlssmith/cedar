@@ -1,4 +1,4 @@
-module Welcome.Auth
+module Welcome
     exposing
         ( Model
         , Msg
@@ -9,15 +9,13 @@ module Welcome.Auth
         )
 
 import Auth
+import Html exposing (Html, div, text, h4, img, form)
 import Html.Attributes exposing (title, class, href, src, action)
-import Html exposing (Html, div, text, form, img, h4)
-import Html.Lazy
 import Material
 import Material.Button as Button
 import Material.Icon as Icon
-import Material.Options as Options
 import Material.Textfield as Textfield
-import ViewUtils
+import Material.Options as Options
 
 
 type alias Model =
@@ -45,40 +43,45 @@ init =
     }
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg, Cmd Auth.Msg )
 update action model =
     case action of
         Mdl action_ ->
-            Material.update Mdl action_ model
+            let
+                ( newModel, cmd ) =
+                    Material.update Mdl action_ model
+            in
+                ( newModel, cmd, Cmd.none )
 
         GetStarted ->
-            ( model, Cmd.none )
+            ( model, Cmd.none, Cmd.none )
 
         LogIn ->
-            ( model
-            , Cmd.batch
-                [ Auth.login { username = model.username, password = model.password }
-                ]
-            )
+            ( model, Cmd.none, Auth.login { username = model.username, password = model.password } )
 
         TryAgain ->
-            ( model, Cmd.batch [ Auth.unauthed ] )
+            ( model, Cmd.none, Auth.unauthed )
 
         Cancel ->
-            ( model, Cmd.none )
+            ( model, Cmd.none, Cmd.none )
 
         UpdateUsername str ->
-            ( { model | username = str }, Cmd.none )
+            ( { model | username = str }, Cmd.none, Cmd.none )
 
         UpdatePassword str ->
-            ( { model | password = str }, Cmd.none )
+            ( { model | password = str }, Cmd.none, Cmd.none )
+
+
+rhythm1SpacerDiv : Html msg
+rhythm1SpacerDiv =
+    div [ class "layout-spacer" ] []
 
 
 loginView : Model -> Html Msg
 loginView model =
     div []
         [ div [ class "layout-fixed-width--one-card" ]
-            [ ViewUtils.rhythm1SpacerDiv
+            [ rhythm1SpacerDiv
             , div [ class "mdl-grid" ]
                 [ div [ class "mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet mdl-cell--4-col-phone mdl-card mdl-shadow--3dp" ]
                     [ div [ class "mdl-card__media" ]
@@ -97,6 +100,7 @@ loginView model =
                                 [ Textfield.label "Username"
                                 , Textfield.floatingLabel
                                 , Textfield.text_
+                                , Textfield.value model.username
                                 , Options.onInput UpdateUsername
                                 ]
                                 []
@@ -107,6 +111,7 @@ loginView model =
                                 , Textfield.floatingLabel
                                 , Textfield.text_
                                 , Textfield.password
+                                , Textfield.value model.password
                                 , Options.onInput UpdatePassword
                                 ]
                                 []
@@ -139,7 +144,7 @@ notPermittedView : Model -> Html Msg
 notPermittedView model =
     div []
         [ div [ class "layout-fixed-width--one-card" ]
-            [ ViewUtils.rhythm1SpacerDiv
+            [ rhythm1SpacerDiv
             , div [ class "mdl-grid" ]
                 [ div [ class "mdl-cell mdl-cell--12-col mdl-cell--8-col-tablet mdl-cell--4-col-phone mdl-card mdl-shadow--3dp" ]
                     [ div [ class "mdl-card__media" ]
@@ -159,6 +164,7 @@ notPermittedView model =
                                 , Textfield.floatingLabel
                                 , Textfield.text_
                                 , Textfield.disabled
+                                , Textfield.value model.username
                                 ]
                                 []
                             , Textfield.render Mdl
@@ -169,6 +175,7 @@ notPermittedView model =
                                 , Textfield.text_
                                 , Textfield.password
                                 , Textfield.disabled
+                                , Textfield.value model.password
                                 ]
                                 []
                             ]

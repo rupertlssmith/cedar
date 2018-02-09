@@ -21,14 +21,14 @@ checkAll checks model =
 {-| A defalt HTTP error handler that maps:
 401 UNAUTHED -> Auth.unauthed
 -}
-error : Http.Error -> model -> ( model, Cmd msg )
-error httpError model =
+error : (Auth.Msg -> msg) -> Http.Error -> model -> ( model, Cmd msg )
+error tagger httpError model =
     case httpError of
         Http.BadStatus response ->
             if (response.status.code == 401) then
-                ( model, Auth.unauthed )
+                ( model, Auth.unauthed |> Cmd.map tagger )
             else if (response.status.code == 403) then
-                ( model, Auth.unauthed )
+                ( model, Auth.unauthed |> Cmd.map tagger )
             else
                 ( model, Cmd.none )
 
