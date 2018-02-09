@@ -1,4 +1,4 @@
-module Editor.Inline exposing (..)
+module Editor.Inline exposing (view)
 
 import Html exposing (Html, div)
 
