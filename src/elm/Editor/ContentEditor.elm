@@ -43,9 +43,10 @@ import ResizeObserver exposing (ResizeEvent)
 import RouteUrl as Routing
 import ScrollPort exposing (Scroll, Move)
 import StateModel exposing (boolToMaybe, (>&&>), (>||>), (>##>), defaultTransition, mapWhenCompose)
+import Task.Extra exposing (message)
 import Time exposing (second, Time)
 import TreeUtils exposing (updateTree)
-import Utils exposing (error, message)
+import Utils exposing (error)
 
 
 contentZipperToModel : Zipper Content -> ContentModel

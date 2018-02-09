@@ -43,7 +43,7 @@ import Renderer.Flexi exposing (Layout, Template)
 import ResizeObserver
 import RouteUrl as Routing
 import ScrollPort
-import Utils exposing (lift)
+import Update2
 import Welcome.Auth
 
 
@@ -203,7 +203,7 @@ updateAuthMsg : AuthController.Msg -> Model -> ( Model, Cmd Msg )
 updateAuthMsg msg model =
     let
         ( authUpdatedModel, authUpdateCmds ) =
-            lift .auth (\m x -> { m | auth = x }) AuthMsg AuthController.update msg model
+            Update2.lift .auth (\x m -> { m | auth = x }) AuthMsg AuthController.update msg model
 
         isAuthenticated =
             AuthController.isLoggedIn authUpdatedModel.auth.authState
