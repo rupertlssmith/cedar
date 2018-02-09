@@ -1,4 +1,4 @@
-module ViewUtils exposing (..)
+module ViewUtils exposing (rhythm1SpacerDiv)
 
 import Html exposing (..)
 import Html.Attributes exposing (title, class, action, attribute)
@@ -75,9 +75,11 @@ cancelButton model mdl label msg =
 
 
 {-| Builds a control bar with *ok* and *cancel* actions.
-- The ok action is specified as button.
-- The cancel action is specified as a msg to trigger on the cancel button
-click.
+
+  - The ok action is specified as button.
+  - The cancel action is specified as a msg to trigger on the cancel button
+    click.
+
 -}
 okCancelControlBar : Material.Model -> (Material.Msg msg -> msg) -> Html msg -> Html msg -> Html msg
 okCancelControlBar model mdl okButton cancelButton =

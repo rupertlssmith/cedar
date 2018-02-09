@@ -27,6 +27,7 @@
     "elm-community/maybe-extra": "3.0.0 <= v < 4.0.0",
     "abrykajlo/elm-scroll": "2.0.1 <= v < 3.0.0",
     "debois/elm-dom": "1.2.3 <= v < 2.0.0",
+    "debois/elm-mdl": "8.1.0 <= v < 9.0.0",
     "mdgriffith/elm-style-animation": "3.5.2 <= v < 4.0.0",
     "mdgriffith/style-elements": "2.0.1 <= v < 3.0.0",
     "pablohirafuji/elm-markdown": "2.0.4 <= v < 3.0.0",
@@ -36,7 +37,6 @@
     "the-sett/elm-state-machines": "1.0.0 <= v < 2.0.0",
     "tomjkidd/elm-multiway-tree-zipper": "1.10.2 <= v < 11.0.0",
 
-    "debois/elm-mdl": "8.1.0 <= v < 9.0.0",
     "krisajenkins/elm-exts": "26.1.0 <= v < 27.0.0",
     "Fresheyeball/elm-function-extra": "3.0.0 <= v < 4.0.0"
   },
