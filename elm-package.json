@@ -33,7 +33,7 @@
     "pablohirafuji/elm-markdown": "2.0.4 <= v < 3.0.0",
     "rgrempel/elm-route-url": "3.0.0 <= v < 4.0.0",
     "rgrempel/elm-http-decorators": "2.0.0 <= v < 3.0.0",
-    "the-sett/auth-elm": "3.0.1 <= v < 4.0.0",
+    "the-sett/auth-elm": "3.0.2 <= v < 4.0.0",
     "the-sett/elm-state-machines": "1.0.0 <= v < 2.0.0",
     "the-sett/elm-update-helper": "1.2.0 <= v < 2.0.0",
     "tomjkidd/elm-multiway-tree-zipper": "1.10.2 <= v < 11.0.0",
