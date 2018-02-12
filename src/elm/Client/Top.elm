@@ -183,7 +183,7 @@ update action model =
         ( FailedAuth state, WelcomeMsg msg ) ->
             Update3.lift .welcome (\x m -> { m | welcome = x }) WelcomeMsg Welcome.update msg state
                 |> Update3.evalCmds AuthMsg
-                |> Tuple.mapFirst (\welcome -> { model | session = Welcome welcome })
+                |> Tuple.mapFirst (\welcome -> { model | session = FailedAuth welcome })
 
         ( Authenticated state, ContentEditorMsg msg ) ->
             Update2.lift .contentEditor (\x m -> { m | contentEditor = x }) ContentEditorMsg CE.update msg state
@@ -193,25 +193,28 @@ update action model =
             ( model, Cmd.none )
 
 
-updateOnAuthStatus : Auth.Status -> Model -> ( Model, Cmd msg )
+updateOnAuthStatus : Auth.Status -> Model -> ( Model, Cmd Msg )
 updateOnAuthStatus status model =
-    let
-        session =
-            case status of
-                Auth.Failed ->
-                    FailedAuth { welcome = Welcome.init }
+    case status of
+        Auth.Failed ->
+            case model.session of
+                Welcome welcome ->
+                    ( { model | session = FailedAuth welcome }, Cmd.none )
 
-                Auth.LoggedOut ->
-                    Welcome { welcome = Welcome.init }
+                _ ->
+                    ( { model | session = FailedAuth { welcome = Welcome.init } }, Cmd.none )
 
-                Auth.LoggedIn authenticated ->
-                    let
-                        init =
-                            CE.init config authenticated.subject
-                    in
-                        Authenticated { contentEditor = Tuple.first init }
-    in
-        ( { model | session = session }, Cmd.none )
+        Auth.LoggedOut ->
+            ( { model | session = Welcome { welcome = Welcome.init } }, Cmd.none )
+
+        Auth.LoggedIn authenticated ->
+            let
+                ( contentEditor, editorInitCmds ) =
+                    CE.init config authenticated.subject
+            in
+                ( { model | session = Authenticated { contentEditor = contentEditor } }
+                , editorInitCmds |> Cmd.map ContentEditorMsg
+                )
 
 
 
