@@ -81,10 +81,6 @@ init =
     )
 
 
-setLoginLocations authState =
-    { authState | logoutLocation = "#/welcome", forwardLocation = "" }
-
-
 
 -- Subscriptions
 
