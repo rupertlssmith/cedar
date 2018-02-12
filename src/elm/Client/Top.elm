@@ -74,10 +74,10 @@ state is.
 -}
 init : ( Model, Cmd Msg )
 init =
-    ( { auth = Auth.init config
+    ( { auth = Auth.init { authApiRoot = config.authApiRoot }
       , session = Initial
       }
-    , Auth.refresh
+    , Auth.refresh |> Cmd.map AuthMsg
     )
 
 
@@ -178,13 +178,16 @@ update action model =
         ( Welcome state, WelcomeMsg msg ) ->
             Update3.lift .welcome (\x m -> { m | welcome = x }) WelcomeMsg Welcome.update msg state
                 |> Update3.evalCmds AuthMsg
+                |> Tuple.mapFirst (\welcome -> { model | session = Welcome welcome })
 
         ( FailedAuth state, WelcomeMsg msg ) ->
             Update3.lift .welcome (\x m -> { m | welcome = x }) WelcomeMsg Welcome.update msg state
                 |> Update3.evalCmds AuthMsg
+                |> Tuple.mapFirst (\welcome -> { model | session = Welcome welcome })
 
         ( Authenticated state, ContentEditorMsg msg ) ->
             Update2.lift .contentEditor (\x m -> { m | contentEditor = x }) ContentEditorMsg CE.update msg state
+                |> Tuple.mapFirst (\contentEditor -> { model | session = Authenticated contentEditor })
 
         ( _, _ ) ->
             ( model, Cmd.none )

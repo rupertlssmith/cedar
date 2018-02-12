@@ -17,6 +17,7 @@ import Json.Decode.Extra exposing ((|:), withDefault)
 type alias Config =
     { applicationContextRoot : String
     , apiRoot : String
+    , authApiRoot : String
     , avatarApiRoot : String
     }
 
@@ -27,6 +28,7 @@ config : Config
 config =
     { applicationContextRoot = "/"
     , apiRoot = "/api/"
+    , authApiRoot = "/auth/"
     , avatarApiRoot = "/avatar/api/"
     }
 
@@ -36,13 +38,15 @@ config =
 configDecoder : Decoder Config
 configDecoder =
     (Decode.succeed
-        (\applicationContextRoot apiRoot avatarApiRoot ->
+        (\applicationContextRoot apiRoot authApiRoot avatarApiRoot ->
             { applicationContextRoot = applicationContextRoot
             , apiRoot = apiRoot
+            , authApiRoot = authApiRoot
             , avatarApiRoot = avatarApiRoot
             }
         )
     )
         |: field "applicationContextRoot" Decode.string
         |: field "apiRoot" Decode.string
+        |: field "authApiRoot" Decode.string
         |: field "avatarApiRoot" Decode.string
