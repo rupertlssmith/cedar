@@ -37,18 +37,9 @@ import Editor.OverlayState as OverlayState
         , toActiveWithValue
         , toInactive
         )
-
-
---import Function exposing (swirlr)
-
 import Html.Attributes exposing (class, href)
 import Html.Events as Events
 import Html exposing (Html, text, div, button, textarea)
-
-
---import Maybe exposing (andThen)
---import Maybe.Extra exposing (isJust, unwrap, orElse, join)
-
 import Optional exposing (optional)
 import RectUtils exposing (enlarge, noRect, zeroPosition, translate)
 import ResizeObserver exposing (ResizeEvent)
@@ -59,8 +50,8 @@ import Time exposing (second, Time)
 
 type Msg
     = Animate Animation.Msg
-    | ControlBarUpdate ControlBar.Msg
-    | ControlBar ControlBar.OutMsg
+    | ControlBar ControlBar.Msg
+    | ControlBarSelect ControlBar.OutMsg
     | ClickOverlay
     | MouseOut
     | ClickOut
@@ -112,7 +103,7 @@ subscriptions model =
             Animation.subscription Animate [ state.position.overlayStyle ]
 
         controlBarSub state =
-            ControlBar.subscriptions state.controlBar |> Sub.map ControlBarUpdate
+            ControlBar.subscriptions state.controlBar |> Sub.map ControlBar
     in
         case model.state of
             Aware state ->
@@ -138,7 +129,7 @@ debugFilter msg =
         Animate _ ->
             msg
 
-        ControlBarUpdate _ ->
+        ControlBar _ ->
             msg
 
         _ ->
@@ -151,34 +142,6 @@ noop model =
 
 update : Msg -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
 update msg model =
-    -- case (debugFilter msg) of
-    --     Animate msg ->
-    --         -- update animation when with position
-    --         updateAnimate msg model
-    --
-    --     ControlBarUpdate msg ->
-    --         -- update control bar when with control bar
-    --         updateControlBarUpdate msg model
-    --
-    --     ControlBar (ControlBar.Selected name) ->
-    --         -- turn a control bar selection into an out message
-    --         updateControlBar name model
-    --
-    --     ClickOverlay ->
-    --         -- when aware select markdown mode
-    --         updateClickOverlay model
-    --
-    --     MouseOut ->
-    --         -- when aware hide
-    --         updateMouseOut model
-    --
-    --     ClickOut ->
-    --         -- hide
-    --         updateClickOut model
-    --
-    --     UpdateContent value ->
-    --         -- when active update the content
-    --         updateUpdateContent value model
     case model.state of
         Aware state ->
             case (debugFilter msg) of
@@ -205,13 +168,13 @@ update msg model =
                     , Nothing
                     )
 
-                ControlBarUpdate msg ->
+                ControlBar msg ->
                     ( { model | state = mapControlBar (updateControlBarUpdate msg) model.state }
                     , Cmd.none
                     , Nothing
                     )
 
-                ControlBar (ControlBar.Selected name) ->
+                ControlBarSelect (ControlBar.Selected name) ->
                     updateControlBar name model
 
                 ClickOut ->
@@ -231,13 +194,13 @@ update msg model =
                     , Nothing
                     )
 
-                ControlBarUpdate msg ->
+                ControlBar msg ->
                     ( { model | state = mapControlBar (updateControlBarUpdate msg) model.state }
                     , Cmd.none
                     , Nothing
                     )
 
-                ControlBar (ControlBar.Selected name) ->
+                ControlBarSelect (ControlBar.Selected name) ->
                     updateControlBar name model
 
                 ClickOut ->
@@ -317,15 +280,6 @@ makeAware rect model =
                 (overlayPositionedStyle rect |> Animation.style)
                 (overlayAwareStyle rect)
     in
-        --         { model
-        --             | state =
-        --                 toAware
-        --                     { rect = rect
-        --                     , yOffset = 0.0
-        --                     , overlayStyle = newOverlayStyle rect
-        --                     }
-        --                     |> defaultTransition model.state
-        --         }
         case model.state of
             Hidden state ->
                 { model
@@ -354,21 +308,6 @@ makeActive yOffset value model =
         controlBar =
             ControlBar.show initControlBar
     in
-        --         { model
-        --             | state =
-        --                 (awareToActive { controlBar = controlBar } { value = value })
-        --                     >||> (withControlBarToActive { value = value })
-        --                     >&&>
-        --                         (updateWhenWithPosition
-        --                             (\position ->
-        --                                 { position
-        --                                     | overlayStyle = newOverlayStyle position.overlayStyle position.rect
-        --                                     , yOffset = yOffset
-        --                                 }
-        --                             )
-        --                         )
-        --                     |> defaultTransition model.state
-        --         }
         case model.state of
             Aware state ->
                 { model | state = toActiveWithControlBarAndValue controlBar value state }
@@ -426,21 +365,6 @@ resize size model =
                     , overlayStyle = newOverlayStyle newRect position.overlayStyle
                 }
     in
-        -- { model
-        --     | state =
-        --         updateWhenWithPosition
-        --             (\position ->
-        --                 let
-        --                     newRect =
-        --                         resize size position.rect
-        --                 in
-        --                     { position
-        --                         | rect = newRect
-        --                         , overlayStyle = newOverlayStyle newRect position.overlayStyle
-        --                     }
-        --             )
-        --             |> defaultTransition model.state
-        -- }
         { model | state = mapPosition move model.state }
 
 
@@ -450,11 +374,6 @@ scroll ( from, to ) model =
         move to position =
             { position | yOffset = to }
     in
-        -- { model
-        -- | state =
-        --   updateWhenWithPosition (\position -> { position | yOffset = to })
-        --   |> defaultTransition model.state
-        -- }
         { model | state = mapPosition (move to) model.state }
 
 
@@ -603,18 +522,6 @@ view model =
             (positionStyle >> Animation.style >> Animation.render) position.rect
                 ++ [ class "editor-overlay__container" ]
     in
-        -- div
-        -- (mapWhenWithPosition attributes model.state |> Maybe.withDefault [])
-        -- (optional
-        -- [ mapWhenWithPosition (\_ -> overlayFrame model.state) model.state
-        -- , (maybeActive
-        -- >||> maybeInactive
-        -- >&&> mapWhenWithPosition (\{ rect, yOffset } -> clickPlane yOffset rect)
-        -- )
-        -- model.state
-        -- , mapWhenWithControlBar controlBar model.state
-        -- ]
-        -- )
         case model.state of
             Hidden state ->
                 div [] []
@@ -653,7 +560,7 @@ view model =
 controlBar : { m | controlBar : ControlBar.Model } -> Html Msg
 controlBar state =
     ControlBar.view "editor-overlay__controlbar" state.controlBar
-        |> Html.map ControlBar
+        |> Html.map ControlBarSelect
 
 
 clickPlane : { m | position : Position } -> Html Msg
@@ -713,175 +620,3 @@ overlayEditor state =
             ]
             [ text state.value ]
         ]
-
-
-
--- type alias WithPosition =
---     { rect : Rectangle
---     , yOffset : Float
---     , overlayStyle : Animation.State
---     }
---
---
--- type alias WithValue =
---     { value : String }
---
---
--- type alias WithControlBar =
---     { controlBar : ControlBar.Model }
---
---
--- type State
---     = Hidden
---     | Aware WithPosition
---     | Active WithPosition WithControlBar WithValue
---     | Inactive WithPosition WithControlBar
---
---
--- maybeHidden : State -> Maybe State
--- maybeHidden state =
---     case state of
---         Hidden ->
---             Just state
---
---         _ ->
---             Nothing
---
---
--- maybeAware : State -> Maybe State
--- maybeAware state =
---     case state of
---         Aware _ ->
---             Just state
---
---         _ ->
---             Nothing
---
---
--- maybeActive : State -> Maybe State
--- maybeActive state =
---     case state of
---         Active _ _ _ ->
---             Just state
---
---         _ ->
---             Nothing
---
---
--- maybeInactive : State -> Maybe State
--- maybeInactive state =
---     case state of
---         Inactive _ _ ->
---             Just state
---
---         _ ->
---             Nothing
---
---
--- mapWhenWithPosition : (WithPosition -> a) -> State -> Maybe a
--- mapWhenWithPosition func state =
---     case state of
---         Aware position ->
---             Just <| func position
---
---         Active position _ _ ->
---             Just <| func position
---
---         Inactive position _ ->
---             Just <| func position
---
---         _ ->
---             Nothing
---
---
--- mapWhenWithValue : (WithValue -> a) -> State -> Maybe a
--- mapWhenWithValue func state =
---     case state of
---         Active _ _ value ->
---             Just <| func value
---
---         _ ->
---             Nothing
---
---
--- mapWhenWithControlBar : (WithControlBar -> a) -> State -> Maybe a
--- mapWhenWithControlBar func state =
---     case state of
---         Active _ controlBar _ ->
---             Just <| func controlBar
---
---         Inactive _ controlBar ->
---             Just <| func controlBar
---
---         _ ->
---             Nothing
---
---
--- updateWhenWithPosition : (WithPosition -> WithPosition) -> State -> Maybe State
--- updateWhenWithPosition func state =
---     case state of
---         Aware position ->
---             func position |> Aware |> Just
---
---         Active position controlBar value ->
---             func position |> (\position -> Active position controlBar value) |> Just
---
---         Inactive position controlBar ->
---             func position |> (flip Inactive) controlBar |> Just
---
---         _ ->
---             Nothing
---
---
--- updateWhenWithValue : (WithValue -> WithValue) -> State -> Maybe State
--- updateWhenWithValue func state =
---     case state of
---         Active position controlBar value ->
---             func value |> Active position controlBar |> Just
---
---         _ ->
---             Nothing
---
---
--- updateWhenWithControlBar : (WithControlBar -> WithControlBar) -> State -> Maybe State
--- updateWhenWithControlBar func state =
---     case state of
---         Active position controlBar value ->
---             func controlBar |> (flip (Active position)) value |> Just
---
---         Inactive position controlBar ->
---             func controlBar |> Inactive position |> Just
---
---         _ ->
---             Nothing
---
---
--- toHidden : State -> State
--- toHidden _ =
---     Hidden
---
---
--- toAware : WithPosition -> State -> Maybe State
--- toAware position state =
---     case state of
---         Hidden ->
---             Just <| Aware position
---
---         _ ->
---             Nothing
---
---
--- awareToActive : WithControlBar -> WithValue -> State -> Maybe State
--- awareToActive controlBar value =
---     maybeAware
---         >&&> mapWhenWithPosition (\position -> Active position controlBar value)
---
---
--- withControlBarToActive : WithValue -> State -> Maybe State
--- withControlBarToActive value =
---     mapWhenCompose mapWhenWithPosition mapWhenWithControlBar ((swirlr Active) value)
---
---
--- toInactive : State -> Maybe State
--- toInactive state =
---     mapWhenCompose mapWhenWithPosition mapWhenWithControlBar Inactive state
