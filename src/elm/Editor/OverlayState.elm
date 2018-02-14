@@ -83,40 +83,55 @@ inactive position controlBar =
 -- Map functions
 
 
-mapPosition :
-    (Position -> Position)
-    -> State p { m | position : Position }
-    -> State p { m | position : Position }
-mapPosition func state =
+mapPosition : (Position -> Position) -> OverlayState -> OverlayState
+mapPosition func overlayState =
     let
         mapField func =
             \model -> { model | position = func model.position }
     in
-        map (mapField func) state
+        case overlayState of
+            Aware state ->
+                map (mapField func) state |> Aware
+
+            Active state ->
+                map (mapField func) state |> Active
+
+            Inactive state ->
+                map (mapField func) state |> Inactive
+
+            _ ->
+                overlayState
 
 
-mapControlBar :
-    (ControlBar.Model -> ControlBar.Model)
-    -> State p { m | controlBar : ControlBar.Model }
-    -> State p { m | controlBar : ControlBar.Model }
-mapControlBar func state =
+mapControlBar : (ControlBar.Model -> ControlBar.Model) -> OverlayState -> OverlayState
+mapControlBar func overlayState =
     let
         mapField func =
             \model -> { model | controlBar = func model.controlBar }
     in
-        map (mapField func) state
+        case overlayState of
+            Active state ->
+                map (mapField func) state |> Active
+
+            Inactive state ->
+                map (mapField func) state |> Inactive
+
+            _ ->
+                overlayState
 
 
-mapValue :
-    (String -> String)
-    -> State p { m | value : String }
-    -> State p { m | value : String }
-mapValue func state =
+mapValue : (String -> String) -> OverlayState -> OverlayState
+mapValue func overlayState =
     let
         mapField func =
             \model -> { model | value = func model.value }
     in
-        map (mapField func) state
+        case overlayState of
+            Active state ->
+                map (mapField func) state |> Active
+
+            _ ->
+                overlayState
 
 
 
@@ -129,16 +144,16 @@ toAwareWithPosition position _ =
     aware position
 
 
-toActiveWithControlBarAndValue : ControlBar.Model -> String -> State { a | aware : Allowed } { m | pos : Position } -> OverlayState
+toActiveWithControlBarAndValue : ControlBar.Model -> String -> State { a | active : Allowed } { m | position : Position } -> OverlayState
 toActiveWithControlBarAndValue controlBar value (State model) =
-    active model.pos controlBar value
+    active model.position controlBar value
 
 
-toActiveWithValue : String -> State { a | active : Allowed } { m | pos : Position, controlBar : ControlBar.Model } -> OverlayState
+toActiveWithValue : String -> State { a | active : Allowed } { m | position : Position, controlBar : ControlBar.Model } -> OverlayState
 toActiveWithValue value (State model) =
-    active model.pos model.controlBar value
+    active model.position model.controlBar value
 
 
-toInactive : State { a | inactive : Allowed } { m | pos : Position, controlBar : ControlBar.Model } -> OverlayState
+toInactive : State { a | inactive : Allowed } { m | position : Position, controlBar : ControlBar.Model } -> OverlayState
 toInactive (State model) =
-    inactive model.pos model.controlBar
+    inactive model.position model.controlBar

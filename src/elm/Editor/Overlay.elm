@@ -7,12 +7,12 @@ module Editor.Overlay
         , subscriptions
         , update
         , view
-          --, makeAware
-          --, makeActive
-          --, makeInactive
-          --, clear
-          --, resize
-          --, scroll
+        , makeAware
+        , makeActive
+        , makeInactive
+        , clear
+        , resize
+        , scroll
         )
 
 import Animation exposing (px, Property, Interpolation)
@@ -37,17 +37,22 @@ import Editor.OverlayState as OverlayState
         , toActiveWithValue
         , toInactive
         )
-import Function exposing (swirlr)
+
+
+--import Function exposing (swirlr)
+
 import Html.Attributes exposing (class, href)
 import Html.Events as Events
 import Html exposing (Html, text, div, button, textarea)
-import Maybe exposing (andThen)
-import Maybe.Extra exposing (isJust, unwrap, orElse, join)
-import Optional exposing (optional, required, when)
+
+
+--import Maybe exposing (andThen)
+--import Maybe.Extra exposing (isJust, unwrap, orElse, join)
+
+import Optional exposing (optional)
 import RectUtils exposing (enlarge, noRect, zeroPosition, translate)
 import ResizeObserver exposing (ResizeEvent)
 import ScrollPort exposing (Move)
-import StateModel exposing (boolToMaybe, (>&&>), (>||>), defaultTransition, mapWhenCompose)
 import Style exposing (StyleSheet)
 import Time exposing (second, Time)
 
@@ -140,6 +145,10 @@ debugFilter msg =
             Debug.log "overlay" msg
 
 
+noop model =
+    ( model, Cmd.none, Nothing )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
 update msg model =
     -- case (debugFilter msg) of
@@ -170,205 +179,315 @@ update msg model =
     --     UpdateContent value ->
     --         -- when active update the content
     --         updateUpdateContent value model
+    case model.state of
+        Aware state ->
+            case (debugFilter msg) of
+                Animate msg ->
+                    updateAnimate msg model
+
+                ClickOverlay ->
+                    updateClickOverlay model
+
+                MouseOut ->
+                    updateMouseOut model
+
+                _ ->
+                    noop model
+
+        Active state ->
+            case (debugFilter msg) of
+                Animate msg ->
+                    updateAnimate msg model
+
+                ControlBarUpdate msg ->
+                    updateControlBarUpdate msg model
+
+                ControlBar (ControlBar.Selected name) ->
+                    updateControlBar name model
+
+                ClickOut ->
+                    updateClickOut model
+
+                UpdateContent value ->
+                    updateUpdateContent value model
+
+                _ ->
+                    noop model
+
+        Inactive state ->
+            case (debugFilter msg) of
+                Animate msg ->
+                    updateAnimate msg model
+
+                ControlBarUpdate msg ->
+                    updateControlBarUpdate msg model
+
+                ControlBar (ControlBar.Selected name) ->
+                    updateControlBar name model
+
+                ClickOut ->
+                    updateClickOut model
+
+                _ ->
+                    noop model
+
+        Hidden state ->
+            noop model
+
+
+updateAnimate : Animation.Msg -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
+updateAnimate msg model =
+    --     ( { model
+    --         | state =
+    --             updateWhenWithPosition
+    --                 (\position ->
+    --                     { position | overlayStyle = Animation.update msg position.overlayStyle }
+    --                 )
+    --                 |> defaultTransition model.state
+    --       }
+    --     , Cmd.none
+    --     , Nothing
+    --     )
+    ( model, Cmd.none, Nothing )
+
+
+updateControlBarUpdate : ControlBar.Msg -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
+updateControlBarUpdate msg model =
+    --     ( { model
+    --         | state =
+    --             updateWhenWithControlBar
+    --                 (\controlBar ->
+    --                     { controlBar | controlBar = ControlBar.update msg controlBar.controlBar }
+    --                 )
+    --                 |> defaultTransition model.state
+    --       }
+    --     , Cmd.none
+    --     , Nothing
+    --     )
+    ( model, Cmd.none, Nothing )
+
+
+updateControlBar : String -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
+updateControlBar name model =
+    --     if name == "markdown" then
+    --         ( model, Cmd.none, Just <| SelectMode name )
+    --     else if name == "preview" then
+    --         ( model, Cmd.none, Just <| SelectMode name )
+    --     else if name == "save" then
+    --         ( model, Cmd.none, Just <| SelectMode name )
+    --     else
+    --         ( model, Cmd.none, Nothing )
+    ( model, Cmd.none, Nothing )
+
+
+updateClickOverlay : Model -> ( Model, Cmd Msg, Maybe OutMsg )
+updateClickOverlay model =
+    --     ( model
+    --     , Cmd.none
+    --     , SelectMode "markdown"
+    --         |> Just
+    --         |> Maybe.Extra.next (maybeAware model.state)
+    --     )
+    ( model, Cmd.none, Nothing )
+
+
+updateMouseOut : Model -> ( Model, Cmd Msg, Maybe OutMsg )
+updateMouseOut model =
+    --     ( { model
+    --         | state =
+    --             Maybe.Extra.unwrap
+    --                 model.state
+    --                 (toHidden)
+    --                 (maybeAware model.state)
+    --       }
+    --     , Cmd.none
+    --     , maybeAware model.state |> Maybe.Extra.prev (Just Closed)
+    --     )
+    ( model, Cmd.none, Nothing )
+
+
+updateClickOut : Model -> ( Model, Cmd Msg, Maybe OutMsg )
+updateClickOut model =
+    --     ( { model | state = toHidden model.state }
+    --     , Cmd.none
+    --     , Just Closed
+    --     )
+    ( model, Cmd.none, Nothing )
+
+
+updateUpdateContent : String -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
+updateUpdateContent value model =
+    -- ( { model
+    --     | state =
+    --         updateWhenWithValue (\withValue -> { withValue | value = value })
+    --             |> defaultTransition model.state
+    --   }
+    -- , Cmd.none
+    -- , ContentValue value |> Just
+    -- )
     ( model, Cmd.none, Nothing )
 
 
 
--- updateAnimate : Animation.Msg -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
--- updateAnimate msg model =
---     ( { model
---         | state =
---             updateWhenWithPosition
---                 (\position ->
---                     { position | overlayStyle = Animation.update msg position.overlayStyle }
---                 )
---                 |> defaultTransition model.state
---       }
---     , Cmd.none
---     , Nothing
---     )
---
---
--- updateControlBarUpdate : ControlBar.Msg -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
--- updateControlBarUpdate msg model =
---     ( { model
---         | state =
---             updateWhenWithControlBar
---                 (\controlBar ->
---                     { controlBar | controlBar = ControlBar.update msg controlBar.controlBar }
---                 )
---                 |> defaultTransition model.state
---       }
---     , Cmd.none
---     , Nothing
---     )
---
---
--- updateControlBar : String -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
--- updateControlBar name model =
---     if name == "markdown" then
---         ( model, Cmd.none, Just <| SelectMode name )
---     else if name == "preview" then
---         ( model, Cmd.none, Just <| SelectMode name )
---     else if name == "save" then
---         ( model, Cmd.none, Just <| SelectMode name )
---     else
---         ( model, Cmd.none, Nothing )
---
---
--- updateClickOverlay : Model -> ( Model, Cmd Msg, Maybe OutMsg )
--- updateClickOverlay model =
---     ( model
---     , Cmd.none
---     , SelectMode "markdown"
---         |> Just
---         |> Maybe.Extra.next (maybeAware model.state)
---     )
---
---
--- updateMouseOut : Model -> ( Model, Cmd Msg, Maybe OutMsg )
--- updateMouseOut model =
---     ( { model
---         | state =
---             Maybe.Extra.unwrap
---                 model.state
---                 (toHidden)
---                 (maybeAware model.state)
---       }
---     , Cmd.none
---     , maybeAware model.state |> Maybe.Extra.prev (Just Closed)
---     )
---
---
--- updateClickOut : Model -> ( Model, Cmd Msg, Maybe OutMsg )
--- updateClickOut model =
---     ( { model | state = toHidden model.state }
---     , Cmd.none
---     , Just Closed
---     )
---
---
--- updateUpdateContent : String -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
--- updateUpdateContent value model =
---     ( { model
---         | state =
---             updateWhenWithValue (\withValue -> { withValue | value = value })
---                 |> defaultTransition model.state
---       }
---     , Cmd.none
---     , ContentValue value |> Just
---     )
 -- Public API
--- makeAware : Rectangle -> Model -> Model
--- makeAware rect model =
---     let
---         newOverlayStyle rect =
---             animateStyle
---                 overlayEasing
---                 (overlayPositionedStyle rect |> Animation.style)
---                 (overlayAwareStyle rect)
---     in
---         { model
---             | state =
---                 toAware
---                     { rect = rect
---                     , yOffset = 0.0
---                     , overlayStyle = newOverlayStyle rect
---                     }
---                     |> defaultTransition model.state
---         }
---
---
--- makeActive : Float -> String -> Model -> Model
--- makeActive yOffset value model =
---     let
---         newOverlayStyle currentStyle rect =
---             animateStyle
---                 overlayActiveEasing
---                 currentStyle
---                 (overlayActiveStyle rect)
---
---         controlBar =
---             ControlBar.show initControlBar
---     in
---         { model
---             | state =
---                 (awareToActive { controlBar = controlBar } { value = value })
---                     >||> (withControlBarToActive { value = value })
---                     >&&>
---                         (updateWhenWithPosition
---                             (\position ->
---                                 { position
---                                     | overlayStyle = newOverlayStyle position.overlayStyle position.rect
---                                     , yOffset = yOffset
---                                 }
---                             )
---                         )
---                     |> defaultTransition model.state
---         }
---
---
--- makeInactive : Model -> Model
--- makeInactive model =
---     { model | state = toInactive |> defaultTransition model.state }
---
---
--- resize : ResizeEvent -> Model -> Model
--- resize size model =
---     let
---         resize size rect =
---             { rect | width = size.width, height = size.height }
---
---         overlayResizeStyle rect currentStyle styleForRect =
---             animateStyle
---                 resizeEasing
---                 currentStyle
---                 (styleForRect rect)
---
---         newOverlayStyle rect currentStyle =
---             case model.state of
---                 Aware _ ->
---                     overlayResizeStyle rect currentStyle overlayAwareStyle
---
---                 Active _ _ _ ->
---                     overlayResizeStyle rect currentStyle overlayActiveStyle
---
---                 Inactive _ _ ->
---                     overlayResizeStyle rect currentStyle overlayActiveStyle
---
---                 _ ->
---                     currentStyle
---     in
---         { model
---             | state =
---                 updateWhenWithPosition
---                     (\position ->
---                         let
---                             newRect =
---                                 resize size position.rect
---                         in
---                             { position
---                                 | rect = newRect
---                                 , overlayStyle = newOverlayStyle newRect position.overlayStyle
---                             }
---                     )
---                     |> defaultTransition model.state
---         }
---
---
--- scroll : Move -> Model -> Model
--- scroll ( from, to ) model =
---     { model
---         | state =
---             updateWhenWithPosition (\position -> { position | yOffset = to })
---                 |> defaultTransition model.state
---     }
---
---
--- clear : Model -> Model
--- clear model =
---     { model | state = toHidden model.state }
---
+
+
+makeAware : Rectangle -> Model -> Model
+makeAware rect model =
+    let
+        newOverlayStyle rect =
+            animateStyle
+                overlayEasing
+                (overlayPositionedStyle rect |> Animation.style)
+                (overlayAwareStyle rect)
+    in
+        --         { model
+        --             | state =
+        --                 toAware
+        --                     { rect = rect
+        --                     , yOffset = 0.0
+        --                     , overlayStyle = newOverlayStyle rect
+        --                     }
+        --                     |> defaultTransition model.state
+        --         }
+        case model.state of
+            Hidden state ->
+                { model
+                    | state =
+                        toAwareWithPosition
+                            { rect = rect
+                            , yOffset = 0.0
+                            , overlayStyle = newOverlayStyle rect
+                            }
+                            state
+                }
+
+            _ ->
+                model
+
+
+makeActive : Float -> String -> Model -> Model
+makeActive yOffset value model =
+    let
+        newOverlayStyle currentStyle rect =
+            animateStyle
+                overlayActiveEasing
+                currentStyle
+                (overlayActiveStyle rect)
+
+        controlBar =
+            ControlBar.show initControlBar
+    in
+        --         { model
+        --             | state =
+        --                 (awareToActive { controlBar = controlBar } { value = value })
+        --                     >||> (withControlBarToActive { value = value })
+        --                     >&&>
+        --                         (updateWhenWithPosition
+        --                             (\position ->
+        --                                 { position
+        --                                     | overlayStyle = newOverlayStyle position.overlayStyle position.rect
+        --                                     , yOffset = yOffset
+        --                                 }
+        --                             )
+        --                         )
+        --                     |> defaultTransition model.state
+        --         }
+        case model.state of
+            Aware state ->
+                { model | state = toActiveWithControlBarAndValue controlBar value state }
+
+            Inactive state ->
+                { model | state = toActiveWithValue value state }
+
+            _ ->
+                model
+
+
+makeInactive : Model -> Model
+makeInactive model =
+    case model.state of
+        Active state ->
+            { model | state = toInactive state }
+
+        _ ->
+            model
+
+
+resize : ResizeEvent -> Model -> Model
+resize size model =
+    let
+        resize size rect =
+            { rect | width = size.width, height = size.height }
+
+        overlayResizeStyle rect currentStyle styleForRect =
+            animateStyle
+                resizeEasing
+                currentStyle
+                (styleForRect rect)
+
+        newOverlayStyle rect currentStyle =
+            case model.state of
+                Aware _ ->
+                    overlayResizeStyle rect currentStyle overlayAwareStyle
+
+                Active _ ->
+                    overlayResizeStyle rect currentStyle overlayActiveStyle
+
+                Inactive _ ->
+                    overlayResizeStyle rect currentStyle overlayActiveStyle
+
+                _ ->
+                    currentStyle
+
+        move position =
+            let
+                newRect =
+                    resize size position.rect
+            in
+                { position
+                    | rect = newRect
+                    , overlayStyle = newOverlayStyle newRect position.overlayStyle
+                }
+    in
+        -- { model
+        --     | state =
+        --         updateWhenWithPosition
+        --             (\position ->
+        --                 let
+        --                     newRect =
+        --                         resize size position.rect
+        --                 in
+        --                     { position
+        --                         | rect = newRect
+        --                         , overlayStyle = newOverlayStyle newRect position.overlayStyle
+        --                     }
+        --             )
+        --             |> defaultTransition model.state
+        -- }
+        { model | state = mapPosition move model.state }
+
+
+scroll : Move -> Model -> Model
+scroll ( from, to ) model =
+    let
+        move to position =
+            { position | yOffset = to }
+    in
+        -- { model
+        -- | state =
+        --   updateWhenWithPosition (\position -> { position | yOffset = to })
+        --   |> defaultTransition model.state
+        -- }
+        { model | state = mapPosition (move to) model.state }
+
+
+clear : Model -> Model
+clear model =
+    { model | state = hidden }
+
+
+
 -- Animation Styles
 
 
