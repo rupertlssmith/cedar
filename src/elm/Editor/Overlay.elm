@@ -308,24 +308,18 @@ updateMouseOut model =
 
 updateClickOut : Model -> ( Model, Cmd Msg, Maybe OutMsg )
 updateClickOut model =
-    --     ( { model | state = toHidden model.state }
-    --     , Cmd.none
-    --     , Just Closed
-    --     )
-    ( model, Cmd.none, Nothing )
+    ( { model | state = hidden }
+    , Cmd.none
+    , Just Closed
+    )
 
 
 updateUpdateContent : String -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
 updateUpdateContent value model =
-    -- ( { model
-    --     | state =
-    --         updateWhenWithValue (\withValue -> { withValue | value = value })
-    --             |> defaultTransition model.state
-    --   }
-    -- , Cmd.none
-    -- , ContentValue value |> Just
-    -- )
-    ( model, Cmd.none, Nothing )
+    ( { model | state = mapValue (always value) model.state }
+    , Cmd.none
+    , ContentValue value |> Just
+    )
 
 
 
