@@ -183,7 +183,10 @@ update msg model =
         Aware state ->
             case (debugFilter msg) of
                 Animate msg ->
-                    updateAnimate msg model
+                    ( { model | state = mapPosition (updateAnimate msg) model.state }
+                    , Cmd.none
+                    , Nothing
+                    )
 
                 ClickOverlay ->
                     updateClickOverlay model
@@ -197,10 +200,16 @@ update msg model =
         Active state ->
             case (debugFilter msg) of
                 Animate msg ->
-                    updateAnimate msg model
+                    ( { model | state = mapPosition (updateAnimate msg) model.state }
+                    , Cmd.none
+                    , Nothing
+                    )
 
                 ControlBarUpdate msg ->
-                    updateControlBarUpdate msg model
+                    ( { model | state = mapControlBar (updateControlBarUpdate msg) model.state }
+                    , Cmd.none
+                    , Nothing
+                    )
 
                 ControlBar (ControlBar.Selected name) ->
                     updateControlBar name model
@@ -217,10 +226,16 @@ update msg model =
         Inactive state ->
             case (debugFilter msg) of
                 Animate msg ->
-                    updateAnimate msg model
+                    ( { model | state = mapPosition (updateAnimate msg) model.state }
+                    , Cmd.none
+                    , Nothing
+                    )
 
                 ControlBarUpdate msg ->
-                    updateControlBarUpdate msg model
+                    ( { model | state = mapControlBar (updateControlBarUpdate msg) model.state }
+                    , Cmd.none
+                    , Nothing
+                    )
 
                 ControlBar (ControlBar.Selected name) ->
                     updateControlBar name model
@@ -235,75 +250,42 @@ update msg model =
             noop model
 
 
-updateAnimate : Animation.Msg -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
-updateAnimate msg model =
-    --     ( { model
-    --         | state =
-    --             updateWhenWithPosition
-    --                 (\position ->
-    --                     { position | overlayStyle = Animation.update msg position.overlayStyle }
-    --                 )
-    --                 |> defaultTransition model.state
-    --       }
-    --     , Cmd.none
-    --     , Nothing
-    --     )
-    ( model, Cmd.none, Nothing )
+updateAnimate : Animation.Msg -> Position -> Position
+updateAnimate msg position =
+    { position | overlayStyle = Animation.update msg position.overlayStyle }
 
 
-updateControlBarUpdate : ControlBar.Msg -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
-updateControlBarUpdate msg model =
-    --     ( { model
-    --         | state =
-    --             updateWhenWithControlBar
-    --                 (\controlBar ->
-    --                     { controlBar | controlBar = ControlBar.update msg controlBar.controlBar }
-    --                 )
-    --                 |> defaultTransition model.state
-    --       }
-    --     , Cmd.none
-    --     , Nothing
-    --     )
-    ( model, Cmd.none, Nothing )
+updateControlBarUpdate : ControlBar.Msg -> ControlBar.Model -> ControlBar.Model
+updateControlBarUpdate msg controlBar =
+    ControlBar.update msg controlBar
 
 
 updateControlBar : String -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
 updateControlBar name model =
-    --     if name == "markdown" then
-    --         ( model, Cmd.none, Just <| SelectMode name )
-    --     else if name == "preview" then
-    --         ( model, Cmd.none, Just <| SelectMode name )
-    --     else if name == "save" then
-    --         ( model, Cmd.none, Just <| SelectMode name )
-    --     else
-    --         ( model, Cmd.none, Nothing )
-    ( model, Cmd.none, Nothing )
+    if name == "markdown" then
+        ( model, Cmd.none, Just <| SelectMode name )
+    else if name == "preview" then
+        ( model, Cmd.none, Just <| SelectMode name )
+    else if name == "save" then
+        ( model, Cmd.none, Just <| SelectMode name )
+    else
+        ( model, Cmd.none, Nothing )
 
 
 updateClickOverlay : Model -> ( Model, Cmd Msg, Maybe OutMsg )
 updateClickOverlay model =
-    --     ( model
-    --     , Cmd.none
-    --     , SelectMode "markdown"
-    --         |> Just
-    --         |> Maybe.Extra.next (maybeAware model.state)
-    --     )
-    ( model, Cmd.none, Nothing )
+    ( model
+    , Cmd.none
+    , SelectMode "markdown" |> Just
+    )
 
 
 updateMouseOut : Model -> ( Model, Cmd Msg, Maybe OutMsg )
 updateMouseOut model =
-    --     ( { model
-    --         | state =
-    --             Maybe.Extra.unwrap
-    --                 model.state
-    --                 (toHidden)
-    --                 (maybeAware model.state)
-    --       }
-    --     , Cmd.none
-    --     , maybeAware model.state |> Maybe.Extra.prev (Just Closed)
-    --     )
-    ( model, Cmd.none, Nothing )
+    ( { model | state = hidden }
+    , Cmd.none
+    , (Just Closed)
+    )
 
 
 updateClickOut : Model -> ( Model, Cmd Msg, Maybe OutMsg )
