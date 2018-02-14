@@ -14,7 +14,7 @@ module Editor.OverlayState
         , mapControlBar
           -- State transitions
         , toAwareWithPosition
-        , toActiveWithControllerAndValue
+        , toActiveWithControlBarAndValue
         , toActiveWithValue
         , toInactive
         )
@@ -50,9 +50,9 @@ and is allowed from any state, so it is not marked explcitly here.
 -}
 type OverlayState
     = Hidden (State { aware : Allowed } {})
-    | Aware (State { active : Allowed } { pos : Position })
-    | Active (State { inactive : Allowed } { pos : Position, controller : ControlBar.Model, val : String })
-    | Inactive (State { active : Allowed } { pos : Position, controller : ControlBar.Model })
+    | Aware (State { active : Allowed } { position : Position })
+    | Active (State { inactive : Allowed } { position : Position, controlBar : ControlBar.Model, value : String })
+    | Inactive (State { active : Allowed } { position : Position, controlBar : ControlBar.Model })
 
 
 
@@ -66,60 +66,57 @@ hidden =
 
 aware : Position -> OverlayState
 aware position =
-    State { pos = position } |> Aware
+    State { position = position } |> Aware
 
 
 active : Position -> ControlBar.Model -> String -> OverlayState
-active position controller value =
-    State { pos = position, controller = controller, val = value } |> Active
+active position controlBar value =
+    State { position = position, controlBar = controlBar, value = value } |> Active
 
 
 inactive : Position -> ControlBar.Model -> OverlayState
-inactive position controller =
-    State { pos = position, controller = controller } |> Inactive
+inactive position controlBar =
+    State { position = position, controlBar = controlBar } |> Inactive
 
 
 
 -- Map functions
 
 
-mapPos : (a -> b) -> ({ m | pos : a } -> { m | pos : b })
-mapPos func =
-    \model -> { model | pos = func model.pos }
-
-
-mapController : (a -> b) -> ({ m | controller : a } -> { m | controller : b })
-mapController func =
-    \model -> { model | controller = func model.controller }
-
-
-mapVal : (a -> b) -> ({ m | val : a } -> { m | val : b })
-mapVal func =
-    \model -> { model | val = func model.val }
-
-
 mapPosition :
     (Position -> Position)
-    -> State p { m | pos : Position }
-    -> State p { m | pos : Position }
+    -> State p { m | position : Position }
+    -> State p { m | position : Position }
 mapPosition func state =
-    map (mapPos func) state
+    let
+        mapField func =
+            \model -> { model | position = func model.position }
+    in
+        map (mapField func) state
 
 
 mapControlBar :
     (ControlBar.Model -> ControlBar.Model)
-    -> State p { m | controller : ControlBar.Model }
-    -> State p { m | controller : ControlBar.Model }
+    -> State p { m | controlBar : ControlBar.Model }
+    -> State p { m | controlBar : ControlBar.Model }
 mapControlBar func state =
-    map (mapController func) state
+    let
+        mapField func =
+            \model -> { model | controlBar = func model.controlBar }
+    in
+        map (mapField func) state
 
 
 mapValue :
     (String -> String)
-    -> State p { m | val : String }
-    -> State p { m | val : String }
+    -> State p { m | value : String }
+    -> State p { m | value : String }
 mapValue func state =
-    map (mapVal func) state
+    let
+        mapField func =
+            \model -> { model | value = func model.value }
+    in
+        map (mapField func) state
 
 
 
@@ -132,16 +129,16 @@ toAwareWithPosition position _ =
     aware position
 
 
-toActiveWithControllerAndValue : ControlBar.Model -> String -> State { a | aware : Allowed } { m | pos : Position } -> OverlayState
-toActiveWithControllerAndValue controller value (State model) =
-    active model.pos controller value
+toActiveWithControlBarAndValue : ControlBar.Model -> String -> State { a | aware : Allowed } { m | pos : Position } -> OverlayState
+toActiveWithControlBarAndValue controlBar value (State model) =
+    active model.pos controlBar value
 
 
-toActiveWithValue : String -> State { a | active : Allowed } { m | pos : Position, controller : ControlBar.Model } -> OverlayState
+toActiveWithValue : String -> State { a | active : Allowed } { m | pos : Position, controlBar : ControlBar.Model } -> OverlayState
 toActiveWithValue value (State model) =
-    active model.pos model.controller value
+    active model.pos model.controlBar value
 
 
-toInactive : State { a | inactive : Allowed } { m | pos : Position, controller : ControlBar.Model } -> OverlayState
+toInactive : State { a | inactive : Allowed } { m | pos : Position, controlBar : ControlBar.Model } -> OverlayState
 toInactive (State model) =
-    inactive model.pos model.controller
+    inactive model.pos model.controlBar
