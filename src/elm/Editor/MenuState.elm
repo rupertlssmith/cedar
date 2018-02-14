@@ -44,9 +44,9 @@ type alias Menu =
 
 
 type MenuState
-    = Disabled (State { available : Allowed } { anim : Animation.State })
-    | Available (State { open : Allowed } { anim : Animation.State, controls : Menu })
-    | Open (State { available : Allowed } { anim : Animation.State, controls : Menu })
+    = Disabled (State { available : Allowed } { slideButtonStyle : Animation.State })
+    | Available (State { open : Allowed } { slideButtonStyle : Animation.State, controls : Menu })
+    | Open (State { available : Allowed } { slideButtonStyle : Animation.State, controls : Menu })
 
 
 
@@ -55,47 +55,55 @@ type MenuState
 
 disabled : Animation.State -> MenuState
 disabled slideButtonStyle =
-    State { anim = slideButtonStyle } |> Disabled
+    State { slideButtonStyle = slideButtonStyle } |> Disabled
 
 
 available : Animation.State -> Menu -> MenuState
 available slideButtonStyle menu =
-    State { anim = slideButtonStyle, controls = menu } |> Available
+    State { slideButtonStyle = slideButtonStyle, controls = menu } |> Available
 
 
 open : Animation.State -> Menu -> MenuState
 open slideButtonStyle menu =
-    State { anim = slideButtonStyle, controls = menu } |> Open
+    State { slideButtonStyle = slideButtonStyle, controls = menu } |> Open
 
 
 
 -- Map functions
 
 
-mapAnim : (a -> b) -> ({ m | anim : a } -> { m | anim : b })
-mapAnim func =
-    \model -> { model | anim = func model.anim }
+mapSlideButtonStyle : (Animation.State -> Animation.State) -> MenuState -> MenuState
+mapSlideButtonStyle func menuState =
+    let
+        mapField func =
+            \model -> { model | slideButtonStyle = func model.slideButtonStyle }
+    in
+        case menuState of
+            Disabled state ->
+                map (mapField func) state |> Disabled
+
+            Available state ->
+                map (mapField func) state |> Available
+
+            Open state ->
+                map (mapField func) state |> Open
 
 
-mapControls : (a -> b) -> ({ m | controls : a } -> { m | controls : b })
-mapControls func =
-    \model -> { model | controls = func model.controls }
+mapMenu : (Menu -> Menu) -> MenuState -> MenuState
+mapMenu func menuState =
+    let
+        mapField func =
+            \model -> { model | controls = func model.controls }
+    in
+        case menuState of
+            Available state ->
+                map (mapField func) state |> Available
 
+            Open state ->
+                map (mapField func) state |> Open
 
-mapSlideButtonStyle :
-    (Animation.State -> Animation.State)
-    -> State p { m | anim : Animation.State }
-    -> State p { m | anim : Animation.State }
-mapSlideButtonStyle func state =
-    map (mapAnim func) state
-
-
-mapMenu :
-    (Menu -> Menu)
-    -> State p { m | controls : Menu }
-    -> State p { m | controls : Menu }
-mapMenu func state =
-    map (mapControls func) state
+            _ ->
+                menuState
 
 
 
@@ -103,16 +111,16 @@ mapMenu func state =
 -- to make a transition.
 
 
-toAvailableWithMenu : Menu -> State { a | available : Allowed } { m | anim : Animation.State } -> MenuState
+toAvailableWithMenu : Menu -> State { a | available : Allowed } { m | slideButtonStyle : Animation.State } -> MenuState
 toAvailableWithMenu menu (State model) =
-    available model.anim menu
+    available model.slideButtonStyle menu
 
 
-toAvailable : State { a | available : Allowed } { m | anim : Animation.State, controls : Menu } -> MenuState
+toAvailable : State { a | available : Allowed } { m | slideButtonStyle : Animation.State, controls : Menu } -> MenuState
 toAvailable (State model) =
-    available model.anim model.controls
+    available model.slideButtonStyle model.controls
 
 
-toOpen : State { a | open : Allowed } { m | anim : Animation.State, controls : Menu } -> MenuState
+toOpen : State { a | open : Allowed } { m | slideButtonStyle : Animation.State, controls : Menu } -> MenuState
 toOpen (State model) =
-    available model.anim model.controls
+    available model.slideButtonStyle model.controls

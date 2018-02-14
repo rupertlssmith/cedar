@@ -10,7 +10,7 @@ module Editor.ModeState
           -- Map
         , mapContent
         , mapSelectedModel
-        , mapEditorStyle
+        , mapInlineEditorStyle
           -- State transitions
         , toExplore
         , toMarkdown
@@ -52,7 +52,7 @@ type ModeState
     | Explore (State { markdown : Allowed } { contentItem : Content })
     | Markdown (State { preview : Allowed, wysiwyg : Allowed } { contentItem : Content, selected : SelectedModel })
     | Preview (State { markdown : Allowed, wysiwyg : Allowed } { contentItem : Content, selected : SelectedModel })
-    | Wysiwyg (State { markdown : Allowed, preview : Allowed } { contentItem : Content, selected : SelectedModel, anim : Animation.State })
+    | Wysiwyg (State { markdown : Allowed, preview : Allowed } { contentItem : Content, selected : SelectedModel, inlineEditorStyle : Animation.State })
 
 
 
@@ -81,50 +81,68 @@ preview content selected =
 
 wysiwyg : Content -> SelectedModel -> Animation.State -> ModeState
 wysiwyg content selected style =
-    State { contentItem = content, selected = selected, anim = style } |> Wysiwyg
+    State { contentItem = content, selected = selected, inlineEditorStyle = style } |> Wysiwyg
 
 
 
 -- Map functions
 
 
-mapContentItem : (a -> b) -> ({ m | contentItem : a } -> { m | contentItem : b })
-mapContentItem func =
-    \model -> { model | contentItem = func model.contentItem }
+mapContent : (Content -> Content) -> ModeState -> ModeState
+mapContent func modeState =
+    let
+        mapField func =
+            \model -> { model | contentItem = func model.contentItem }
+    in
+        case modeState of
+            Explore state ->
+                map (mapField func) state |> Explore
+
+            Markdown state ->
+                map (mapField func) state |> Markdown
+
+            Preview state ->
+                map (mapField func) state |> Preview
+
+            Wysiwyg state ->
+                map (mapField func) state |> Wysiwyg
+
+            _ ->
+                modeState
 
 
-mapSelected : (a -> b) -> ({ m | selected : a } -> { m | selected : b })
-mapSelected func =
-    \model -> { model | selected = func model.selected }
+mapSelectedModel : (SelectedModel -> SelectedModel) -> ModeState -> ModeState
+mapSelectedModel func modeState =
+    let
+        mapField func =
+            \model -> { model | selected = func model.selected }
+    in
+        case modeState of
+            Markdown state ->
+                map (mapField func) state |> Markdown
+
+            Preview state ->
+                map (mapField func) state |> Preview
+
+            Wysiwyg state ->
+                map (mapField func) state |> Wysiwyg
+
+            _ ->
+                modeState
 
 
-mapAnim : (a -> b) -> ({ m | anim : a } -> { m | anim : b })
-mapAnim func =
-    \model -> { model | anim = func model.anim }
+mapInlineEditorStyle : (Animation.State -> Animation.State) -> ModeState -> ModeState
+mapInlineEditorStyle func modeState =
+    let
+        mapField func =
+            \model -> { model | inlineEditorStyle = func model.inlineEditorStyle }
+    in
+        case modeState of
+            Wysiwyg state ->
+                map (mapField func) state |> Wysiwyg
 
-
-mapContent :
-    (Content -> Content)
-    -> State p { m | contentItem : Content }
-    -> State p { m | contentItem : Content }
-mapContent func state =
-    map (mapContentItem func) state
-
-
-mapSelectedModel :
-    (selectedModel -> selectedModel)
-    -> State p { m | selected : selectedModel }
-    -> State p { m | selected : selectedModel }
-mapSelectedModel func state =
-    map (mapSelected func) state
-
-
-mapEditorStyle :
-    (Animation.State -> Animation.State)
-    -> State p { m | anim : Animation.State }
-    -> State p { m | anim : Animation.State }
-mapEditorStyle func state =
-    map (mapAnim func) state
+            _ ->
+                modeState
 
 
 
@@ -148,5 +166,5 @@ toPreview (State model) =
 
 
 toWysiwyg : Animation.State -> State { a | wysiwyg : Allowed } { m | contentItem : Content, selected : SelectedModel } -> ModeState
-toWysiwyg anim (State model) =
-    wysiwyg model.contentItem model.selected anim
+toWysiwyg inlineEditorStyle (State model) =
+    wysiwyg model.contentItem model.selected inlineEditorStyle
