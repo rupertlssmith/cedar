@@ -870,37 +870,119 @@ view layouts templates model =
     --         )
     --         model.mode
     --         |> Maybe.withDefault emptyDiv
-    div [] []
+    case model.mode of
+        Loading state ->
+            div [] [ div [] (menuView model Nothing) ]
+
+        Explore state ->
+            let
+                untagged =
+                    ModeState.untag state
+            in
+                div []
+                    [ div []
+                        ((contentView layouts templates model untagged.contentItem)
+                            :: (menuView model (Just untagged.contentItem))
+                        )
+                    ]
+
+        Markdown state ->
+            let
+                untagged =
+                    ModeState.untag state
+            in
+                div []
+                    [ Overlay.view untagged.selected.overlay |> Html.map OverlayMsg
+                    , div []
+                        ((contentView layouts templates model untagged.contentItem)
+                            :: (menuView model (Just untagged.contentItem))
+                        )
+                    ]
+
+        Preview state ->
+            let
+                untagged =
+                    ModeState.untag state
+            in
+                div []
+                    [ Overlay.view untagged.selected.overlay |> Html.map OverlayMsg
+                    , div []
+                        ((contentView layouts templates model untagged.contentItem)
+                            :: (menuView model (Just untagged.contentItem))
+                        )
+                    ]
+
+        Wysiwyg state ->
+            let
+                untagged =
+                    ModeState.untag state
+            in
+                div []
+                    [ Overlay.view untagged.selected.overlay |> Html.map OverlayMsg
+                    , div []
+                        ((contentView layouts templates model untagged.contentItem)
+                            :: (menuView model (Just untagged.contentItem))
+                        )
+                    ]
 
 
-slideButton : { slideButtonStyle : Animation.State } -> Html Msg
+menuView : Model -> Maybe Content -> List (Html Msg)
+menuView model maybeContent =
+    -- div []
+    --                             , mapWhenWithSlideButton (\button -> slideButton button) model.menu
+    --                             , mapWhenWithAvailable (\available -> sideNav model available maybeContent) model.menu
+    --                             , when (isJust (maybeOpen model.menu)) clickPlane
+    case model.menu of
+        Disabled state ->
+            let
+                untagged =
+                    MenuState.untag state
+            in
+                [ slideButton untagged ]
+
+        Available state ->
+            let
+                untagged =
+                    MenuState.untag state
+            in
+                [ slideButton untagged
+                , sideNav model untagged maybeContent
+                ]
+
+        Open state ->
+            let
+                untagged =
+                    MenuState.untag state
+            in
+                [ slideButton untagged
+                , sideNav model untagged maybeContent
+                ]
+
+
+slideButton : { m | slideButtonStyle : Animation.State } -> Html Msg
 slideButton slideButton =
-    -- div
-    --     [ class "slide-button"
-    --     , Events.onClick ToggleMenu
-    --     ]
-    --     [ div
-    --         (Animation.render slideButton.slideButtonStyle
-    --             ++ [ class "slide-button__inset" ]
-    --         )
-    --         []
-    --     ]
-    div [] []
+    div
+        [ class "slide-button"
+        , Events.onClick ToggleMenu
+        ]
+        [ div
+            (Animation.render slideButton.slideButtonStyle
+                ++ [ class "slide-button__inset" ]
+            )
+            []
+        ]
 
 
-sideNav : Model -> { controls : Menu } -> Maybe Content -> Html Msg
-sideNav model available maybeContent =
-    -- div
-    --     (Animation.render available.menuStyle
-    --         ++ [ class "sidenav" ]
-    --     )
-    --     (optional
-    --         [ userStatusBar model |> required
-    --         , sideNavControlBar available.controlBar |> required
-    --         , contentTree available maybeContent |> required
-    --         ]
-    --     )
-    div [] []
+sideNav : Model -> { m | controls : Menu } -> Maybe Content -> Html Msg
+sideNav model menuState maybeContent =
+    div
+        (Animation.render menuState.controls.menuStyle
+            ++ [ class "sidenav" ]
+        )
+        [ userStatusBar model
+        , sideNavControlBar menuState.controls.controlBar
+        , contentTree menuState maybeContent
+        ]
 
 
 userStatusBar : Model -> Html Msg
@@ -924,11 +1006,10 @@ userStatusBar model =
         ]
 
 
-contentTree : { controls : Menu } -> Maybe Content -> Html Msg
-contentTree available maybeContent =
-    -- ContentTree.view maybeContent available.contentTree
-    --     |> Html.map (\treeMsg -> ContentTreeMsg treeMsg)
-    div [] []
+contentTree : { m | controls : Menu } -> Maybe Content -> Html Msg
+contentTree menuState maybeContent =
+    ContentTree.view maybeContent menuState.controls.contentTree
+        |> Html.map (\treeMsg -> ContentTreeMsg treeMsg)
 
 
 sideNavControlBar : ControlBar.Model -> Html Msg
