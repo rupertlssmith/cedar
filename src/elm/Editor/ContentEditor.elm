@@ -1083,8 +1083,6 @@ editor mode zipper =
         --     )
         --     [ content
         --     ]
-        -- div attributes
-        -- [ htmlContent ]
         case mode of
             Markdown state ->
                 let
