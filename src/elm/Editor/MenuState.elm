@@ -123,4 +123,4 @@ toAvailable (State model) =
 
 toOpen : State { a | open : Allowed } { m | slideButtonStyle : Animation.State, controls : Menu } -> MenuState
 toOpen (State model) =
-    available model.slideButtonStyle model.controls
+    open model.slideButtonStyle model.controls

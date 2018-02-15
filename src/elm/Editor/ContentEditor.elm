@@ -943,6 +943,7 @@ menuView model maybeContent =
             in
                 [ slideButton untagged
                 , sideNav model untagged maybeContent
+                , clickPlane
                 ]
 
 
