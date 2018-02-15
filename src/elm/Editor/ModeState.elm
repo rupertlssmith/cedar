@@ -15,6 +15,7 @@ module Editor.ModeState
         , toExploreWithContent
         , toExplore
         , toMarkdown
+        , toMarkdownWithSelectedModel
         , toPreview
         , toWysiwyg
         )
@@ -52,8 +53,8 @@ type ModeState
     = Loading (State { explore : Allowed } {})
     | Explore (State { markdown : Allowed } { contentItem : Content })
     | Markdown (State { preview : Allowed, wysiwyg : Allowed, explore : Allowed } { contentItem : Content, selected : SelectedModel })
-    | Preview (State { markdown : Allowed, wysiwyg : Allowed } { contentItem : Content, selected : SelectedModel })
-    | Wysiwyg (State { markdown : Allowed, preview : Allowed } { contentItem : Content, selected : SelectedModel, inlineEditorStyle : Animation.State })
+    | Preview (State { markdown : Allowed, wysiwyg : Allowed, explore : Allowed } { contentItem : Content, selected : SelectedModel })
+    | Wysiwyg (State { markdown : Allowed, preview : Allowed, explore : Allowed } { contentItem : Content, selected : SelectedModel, inlineEditorStyle : Animation.State })
 
 
 
@@ -161,9 +162,14 @@ toExplore (State model) =
     explore model.contentItem
 
 
-toMarkdown : SelectedModel -> State { a | markdown : Allowed } { m | contentItem : Content } -> ModeState
-toMarkdown selected (State model) =
+toMarkdownWithSelectedModel : SelectedModel -> State { a | markdown : Allowed } { m | contentItem : Content } -> ModeState
+toMarkdownWithSelectedModel selected (State model) =
     markdown model.contentItem selected
+
+
+toMarkdown : State { a | markdown : Allowed } { m | contentItem : Content, selected : SelectedModel } -> ModeState
+toMarkdown (State model) =
+    markdown model.contentItem model.selected
 
 
 toPreview : State { a | preview : Allowed } { m | contentItem : Content, selected : SelectedModel } -> ModeState

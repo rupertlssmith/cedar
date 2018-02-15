@@ -51,6 +51,7 @@ import Editor.ModeState as ModeState
         , mapInlineEditorStyle
         , toExploreWithContent
         , toExplore
+        , toMarkdownWithSelectedModel
         , toMarkdown
         , toPreview
         , toWysiwyg
@@ -69,6 +70,7 @@ import ScrollPort exposing (Scroll, Move)
 import Task.Extra exposing (message)
 import Time exposing (second, Time)
 import TreeUtils exposing (updateTree)
+import Update3
 import Utils exposing (error)
 
 
@@ -511,6 +513,87 @@ updateContentServiceApi msg model =
     (Content.Service.update csCallbacks msg model)
 
 
+updateModeWithOverlay : Float -> Overlay.OutMsg -> ModeState -> ( ModeState, Cmd Msg )
+updateModeWithOverlay yOffset outmsg mode =
+    case outmsg of
+        Overlay.Closed ->
+            --  mapWhenWithContent (\content -> toExplore content mode) mode
+            case mode of
+                Markdown state ->
+                    ( toExplore state, Cmd.none )
+
+                Preview state ->
+                    ( toExplore state, Cmd.none )
+
+                Wysiwyg state ->
+                    ( toExplore state, Cmd.none )
+
+                _ ->
+                    ( mode, Cmd.none )
+
+        Overlay.SelectMode "markdown" ->
+            -- selectedToMarkdown mode
+            --     |> Maybe.andThen
+            --         (updateWhenWithSelectedModel
+            --             (\selected ->
+            --                 { selected
+            --                     | overlay =
+            --                         Overlay.makeActive
+            --                             model.yOffset
+            --                             (selected.editedValue |> Maybe.withDefault (contentZipperToModel selected.selectedContent |> asMarkdown))
+            --                             selected.overlay
+            --                 }
+            --             )
+            --         )
+            case mode of
+                Preview state ->
+                    let
+                        activateOverlay selected =
+                            { selected
+                                | overlay =
+                                    Overlay.makeActive
+                                        yOffset
+                                        (selected.editedValue |> Maybe.withDefault (contentZipperToModel selected.selectedContent |> asMarkdown))
+                                        selected.overlay
+                            }
+                    in
+                        ( mapSelectedModel activateOverlay <| toMarkdown state
+                        , Cmd.none
+                        )
+
+                _ ->
+                    ( mode, Cmd.none )
+
+        Overlay.SelectMode "preview" ->
+            -- selectedToPreview mode
+            --     |> Maybe.andThen
+            --         (updateWhenWithSelectedModel
+            --             (\selected -> { selected | overlay = Overlay.makeInactive selected.overlay })
+            --         )
+            case mode of
+                Markdown state ->
+                    ( mapSelectedModel (\selected -> { selected | overlay = Overlay.makeInactive selected.overlay }) <|
+                        toPreview state
+                    , Cmd.none
+                    )
+
+                _ ->
+                    ( mode, Cmd.none )
+
+        Overlay.ContentValue value ->
+            -- (updateWhenWithSelectedModel
+            --     (\selected -> { selected | editedValue = Just value })
+            -- )
+            --     mode
+            ( mapSelectedModel (\selected -> { selected | editedValue = Just value }) mode, Cmd.none )
+
+        Overlay.SelectMode "save" ->
+            ( mode, Cmd.none )
+
+        _ ->
+            ( mode, Cmd.none )
+
+
 {-| Forward on the overlay msg to get an update from it.
 Respond to any out messages from the overlay that need attention:
 If it is Closed, then switch to the Explore mode,
@@ -669,22 +752,25 @@ updateOverlayMsg msg model =
     --
     --         Nothing ->
     --             ( model, Cmd.none )
-    case model.mode of
-        Markdown state ->
-            let
-                ( newOverlay, overlayCmds, maybeOutMsg ) =
-                    Overlay.update msg (ModeState.untag state).selected.overlay
-            in
-                ( { model | mode = mapSelectedModel (\selected -> { selected | overlay = newOverlay }) model.mode }, Cmd.none )
+    let
+        updateOverlay state =
+            Update3.lift .overlay (\x m -> { m | overlay = x }) OverlayMsg Overlay.update msg (ModeState.untag state).selected
+                |> Update3.mapModel (\selected -> mapSelectedModel (always selected) model.mode)
+                |> Update3.evalMaybe (updateModeWithOverlay model.yOffset) Cmd.none
+                |> Tuple.mapFirst (\mode -> { model | mode = mode })
+    in
+        case model.mode of
+            Markdown state ->
+                updateOverlay state
 
-        Preview state ->
-            ( model, Cmd.none )
+            Preview state ->
+                updateOverlay state
 
-        Wysiwyg state ->
-            ( model, Cmd.none )
+            Wysiwyg state ->
+                updateOverlay state
 
-        _ ->
-            ( model, Cmd.none )
+            _ ->
+                ( model, Cmd.none )
 
 
 {-| Fetch the content by its slug.
@@ -732,7 +818,7 @@ updateMouseOverContent zipper domState model =
         Explore state ->
             ( { model
                 | mode =
-                    toMarkdown
+                    toMarkdownWithSelectedModel
                         { selectedContent = zipper
                         , overlay = Overlay.makeAware domState.rect Overlay.init
                         , editedValue = Nothing
