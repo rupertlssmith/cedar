@@ -309,7 +309,6 @@ urlOf model =
         slugToUrl (Content content) =
             editorPrefix ++ (Maybe.withDefault "" content.slug)
     in
-        -- mapWhenWithContent (\content -> slugToUrl content.contentItem) model.mode
         case model.mode of
             Explore state ->
                 (ModeState.untag state).contentItem |> slugToUrl |> Just
