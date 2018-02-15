@@ -240,8 +240,17 @@ contentLoaded content model =
         Loading state ->
             ( { model | mode = toExploreWithContent content state }, Cmd.none )
 
-        _ ->
-            ( model, Cmd.none )
+        Explore state ->
+            ( { model | mode = mapContent (always content) <| Explore state }, Cmd.none )
+
+        Markdown state ->
+            ( { model | mode = toExploreWithContent content state }, Cmd.none )
+
+        Preview state ->
+            ( { model | mode = toExploreWithContent content state }, Cmd.none )
+
+        Wysiwyg state ->
+            ( { model | mode = toExploreWithContent content state }, Cmd.none )
 
 
 treeFetched : Content -> Model -> ( Model, Cmd Msg )
@@ -355,24 +364,23 @@ location2messages location =
 debugFilter : Msg -> Msg
 debugFilter msg =
     case msg of
-        Animate _ ->
-            msg
-
-        ControlBarUpdate _ ->
-            msg
-
-        CSEApi _ ->
-            msg
-
-        ContentTreeMsg _ ->
-            msg
-
-        OverlayMsg _ ->
-            msg
-
-        MouseOverContent _ _ ->
-            msg
-
+        -- Animate _ ->
+        --     msg
+        --
+        -- ControlBarUpdate _ ->
+        --     msg
+        --
+        -- CSEApi _ ->
+        --     msg
+        --
+        -- ContentTreeMsg _ ->
+        --     msg
+        --
+        -- OverlayMsg _ ->
+        --     msg
+        --
+        -- MouseOverContent _ _ ->
+        --     msg
         _ ->
             Debug.log "contentEditor" msg
 
@@ -727,6 +735,9 @@ updateContentTreeMsg msg model =
             let
                 ( newTree, outMsg ) =
                     ContentTree.update msg (MenuState.untag state).controls.contentTree
+
+                _ =
+                    Debug.log "updateContentTreeMsg:outmsg" outMsg
             in
                 ( { model | menu = mapMenu (\menu -> { menu | contentTree = newTree }) model.menu }
                 , Maybe.map navigateCmd outMsg
