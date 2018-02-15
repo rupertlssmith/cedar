@@ -1,6 +1,7 @@
 module Editor.ModeState
     exposing
         ( ModeState(..)
+        , SelectedModel
           -- Convenience re-exports from StateMachine
         , State
         , Allowed

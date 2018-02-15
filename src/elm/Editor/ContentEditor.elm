@@ -45,6 +45,7 @@ import Editor.MenuState as MenuState
 import Editor.ModeState as ModeState
     exposing
         ( ModeState(..)
+        , SelectedModel
         , loading
         , mapContent
         , mapSelectedModel
@@ -513,9 +514,9 @@ updateContentServiceApi msg model =
     (Content.Service.update csCallbacks msg model)
 
 
-updateModeWithOverlay : Float -> Overlay.OutMsg -> ModeState -> ( ModeState, Cmd Msg )
-updateModeWithOverlay yOffset outmsg mode =
-    case outmsg of
+updateModeWithOverlay : String -> Float -> Overlay.OutMsg -> ModeState -> ( ModeState, Cmd Msg )
+updateModeWithOverlay apiRoot yOffset outmsg mode =
+    case (Debug.log "updateModeWithOverlay" outmsg) of
         Overlay.Closed ->
             --  mapWhenWithContent (\content -> toExplore content mode) mode
             case mode of
@@ -545,24 +546,29 @@ updateModeWithOverlay yOffset outmsg mode =
             --                 }
             --             )
             --         )
-            case mode of
-                Preview state ->
-                    let
-                        activateOverlay selected =
-                            { selected
-                                | overlay =
-                                    Overlay.makeActive
-                                        yOffset
-                                        (selected.editedValue |> Maybe.withDefault (contentZipperToModel selected.selectedContent |> asMarkdown))
-                                        selected.overlay
-                            }
-                    in
+            let
+                activateOverlay selected =
+                    { selected
+                        | overlay =
+                            Overlay.makeActive
+                                yOffset
+                                (selected.editedValue |> Maybe.withDefault (contentZipperToModel selected.selectedContent |> asMarkdown))
+                                selected.overlay
+                    }
+            in
+                case mode of
+                    Preview state ->
                         ( mapSelectedModel activateOverlay <| toMarkdown state
                         , Cmd.none
                         )
 
-                _ ->
-                    ( mode, Cmd.none )
+                    Markdown state ->
+                        ( mapSelectedModel activateOverlay <| Markdown state
+                        , Cmd.none
+                        )
+
+                    _ ->
+                        ( mode, Cmd.none )
 
         Overlay.SelectMode "preview" ->
             -- selectedToPreview mode
@@ -588,7 +594,92 @@ updateModeWithOverlay yOffset outmsg mode =
             ( mapSelectedModel (\selected -> { selected | editedValue = Just value }) mode, Cmd.none )
 
         Overlay.SelectMode "save" ->
-            ( mode, Cmd.none )
+            -- (mapWhenCompose mapWhenWithSelectedModel updateWhenWithContent)
+            --     (\selected ->
+            --         \withContent ->
+            --             case selected.editedValue of
+            --                 Nothing ->
+            --                     withContent
+            --
+            --                 Just value ->
+            --                     let
+            --                         (( tree, _ ) as zipper) =
+            --                             selected.selectedContent
+            --
+            --                         newTree =
+            --                             TreeUtils.updateTree
+            --                                 (\(Content content) ->
+            --                                     Content
+            --                                         { content
+            --                                             | model =
+            --                                                 (withMarkdown (contentZipperToModel zipper) value)
+            --                                         }
+            --                                 )
+            --                                 zipper
+            --                                 |> Maybe.withDefault tree
+            --
+            --                         d =
+            --                             Debug.log "save" newTree
+            --                     in
+            --                         { withContent | contentItem = containerTreeToContent newTree }
+            --     )
+            --     mode
+            let
+                contentFromEdit : String -> Zipper Content -> Content
+                contentFromEdit value selectedContent =
+                    let
+                        (( tree, _ ) as zipper) =
+                            selectedContent
+
+                        newTree =
+                            TreeUtils.updateTree
+                                (\(Content content) ->
+                                    Content
+                                        { content
+                                            | model =
+                                                (withMarkdown (contentZipperToModel zipper) value)
+                                        }
+                                )
+                                zipper
+                                |> Maybe.withDefault tree
+                    in
+                        containerTreeToContent newTree
+
+                saveCmd : Content -> Cmd Msg
+                saveCmd (Content content) =
+                    let
+                        id =
+                            Maybe.withDefault "" content.id
+                    in
+                        Content.Service.invokeUpdate apiRoot ContentServiceApi id (Content content)
+
+                saveEdits state =
+                    let
+                        untagged =
+                            ModeState.untag state
+                    in
+                        case untagged.selected.editedValue of
+                            Nothing ->
+                                ( mode, Cmd.none )
+
+                            Just value ->
+                                let
+                                    newContent =
+                                        contentFromEdit value untagged.selected.selectedContent
+                                in
+                                    ( mapContent (always newContent) mode
+                                    , saveCmd newContent
+                                    )
+            in
+                case mode of
+                    Preview state ->
+                        saveEdits state
+
+                    Markdown state ->
+                        saveEdits state
+
+                    _ ->
+                        ( mode, Cmd.none )
 
         _ ->
             ( mode, Cmd.none )
@@ -756,7 +847,7 @@ updateOverlayMsg msg model =
         updateOverlay state =
             Update3.lift .overlay (\x m -> { m | overlay = x }) OverlayMsg Overlay.update msg (ModeState.untag state).selected
                 |> Update3.mapModel (\selected -> mapSelectedModel (always selected) model.mode)
-                |> Update3.evalMaybe (updateModeWithOverlay model.yOffset) Cmd.none
+                |> Update3.evalMaybe (updateModeWithOverlay model.config.apiRoot model.yOffset) Cmd.none
                 |> Tuple.mapFirst (\mode -> { model | mode = mode })
     in
         case model.mode of
