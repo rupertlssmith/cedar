@@ -12,6 +12,7 @@ module Editor.ModeState
         , mapSelectedModel
         , mapInlineEditorStyle
           -- State transitions
+        , toExploreWithContent
         , toExplore
         , toMarkdown
         , toPreview
@@ -50,7 +51,7 @@ type alias SelectedModel =
 type ModeState
     = Loading (State { explore : Allowed } {})
     | Explore (State { markdown : Allowed } { contentItem : Content })
-    | Markdown (State { preview : Allowed, wysiwyg : Allowed } { contentItem : Content, selected : SelectedModel })
+    | Markdown (State { preview : Allowed, wysiwyg : Allowed, explore : Allowed } { contentItem : Content, selected : SelectedModel })
     | Preview (State { markdown : Allowed, wysiwyg : Allowed } { contentItem : Content, selected : SelectedModel })
     | Wysiwyg (State { markdown : Allowed, preview : Allowed } { contentItem : Content, selected : SelectedModel, inlineEditorStyle : Animation.State })
 
@@ -150,9 +151,14 @@ mapInlineEditorStyle func modeState =
 -- to make a transition.
 
 
-toExplore : Content -> State { a | explore : Allowed } m -> ModeState
-toExplore content _ =
+toExploreWithContent : Content -> State { a | explore : Allowed } m -> ModeState
+toExploreWithContent content _ =
     explore content
+
+
+toExplore : State { a | explore : Allowed } { m | contentItem : Content } -> ModeState
+toExplore (State model) =
+    explore model.contentItem
 
 
 toMarkdown : SelectedModel -> State { a | markdown : Allowed } { m | contentItem : Content } -> ModeState

@@ -49,6 +49,7 @@ import Editor.ModeState as ModeState
         , mapContent
         , mapSelectedModel
         , mapInlineEditorStyle
+        , toExploreWithContent
         , toExplore
         , toMarkdown
         , toPreview
@@ -160,7 +161,83 @@ subscriptions resize scroll model =
     --         , scroll |> Sub.map (\event -> BodyScroll event) |> required
     --         ]
     --     )
-    Sub.none
+    let
+        menuSubs =
+            case model.menu of
+                Disabled state ->
+                    let
+                        untagged =
+                            MenuState.untag state
+                    in
+                        Animation.subscription Animate [ untagged.slideButtonStyle ]
+
+                Available state ->
+                    let
+                        untagged =
+                            MenuState.untag state
+                    in
+                        Sub.batch
+                            [ Animation.subscription Animate
+                                [ untagged.slideButtonStyle
+                                , untagged.controls.menuStyle
+                                ]
+                            , ContentTree.subscriptions untagged.controls.contentTree
+                                |> Sub.map ContentTreeMsg
+                            ]
+
+                Open state ->
+                    let
+                        untagged =
+                            MenuState.untag state
+                    in
+                        Sub.batch
+                            [ Animation.subscription Animate
+                                [ untagged.slideButtonStyle
+                                , untagged.controls.menuStyle
+                                ]
+                            , ContentTree.subscriptions untagged.controls.contentTree
+                                |> Sub.map ContentTreeMsg
+                            ]
+
+        modeSubs =
+            case model.mode of
+                Markdown state ->
+                    let
+                        untagged =
+                            ModeState.untag state
+                    in
+                        Overlay.subscriptions untagged.selected.overlay
+                            |> Sub.map OverlayMsg
+
+                Preview state ->
+                    let
+                        untagged =
+                            ModeState.untag state
+                    in
+                        Overlay.subscriptions untagged.selected.overlay
+                            |> Sub.map OverlayMsg
+
+                Wysiwyg state ->
+                    let
+                        untagged =
+                            ModeState.untag state
+                    in
+                        Sub.batch
+                            [ Overlay.subscriptions untagged.selected.overlay
+                                |> Sub.map OverlayMsg
+                            , Animation.subscription Animate
+                                [ untagged.inlineEditorStyle ]
+                            ]
+
+                _ ->
+                    Sub.none
+    in
+        Sub.batch
+            [ menuSubs
+            , modeSubs
+            , resize |> Sub.map (\event -> Resize event)
+            , scroll |> Sub.map (\event -> BodyScroll event)
+            ]
 
 
 
@@ -182,10 +259,12 @@ cseCallbacks =
 
 contentLoaded : Content -> Model -> ( Model, Cmd Msg )
 contentLoaded content model =
-    -- ( { model | mode = toExplore { contentItem = content } model.mode }
-    -- , Cmd.none
-    -- )
-    ( model, Cmd.none )
+    case (Debug.log "contentLoaded" model.mode) of
+        Loading state ->
+            ( { model | mode = toExploreWithContent content state }, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 treeFetched : Content -> Model -> ( Model, Cmd Msg )
@@ -205,7 +284,40 @@ treeFetched content model =
     --       }
     --     , Cmd.none
     --     )
-    ( model, Cmd.none )
+    let
+        maybeContent =
+            case model.mode of
+                Explore state ->
+                    (ModeState.untag state).contentItem |> Just
+
+                Markdown state ->
+                    (ModeState.untag state).contentItem |> Just
+
+                Preview state ->
+                    (ModeState.untag state).contentItem |> Just
+
+                Wysiwyg state ->
+                    (ModeState.untag state).contentItem |> Just
+
+                _ ->
+                    Nothing
+    in
+        case (Debug.log "treeFetched" model.menu) of
+            Disabled state ->
+                ( { model
+                    | menu =
+                        toAvailableWithMenu
+                            { menuStyle = Animation.style menuClosedStyle
+                            , controlBar = ControlBar.init "slideInMenu" [ ( "collapseall", "control-icon control-icon__collapse-all" ) ]
+                            , contentTree = ContentTree.init content maybeContent
+                            }
+                            state
+                  }
+                , Cmd.none
+                )
+
+            _ ->
+                ( model, Cmd.none )
 
 
 csCallbacks : Content.Service.Callbacks Model Msg
@@ -365,51 +477,38 @@ update action model =
 -}
 updateAnimate : Animation.Msg -> Model -> ( Model, Cmd Msg )
 updateAnimate msg model =
-    -- let
-    --     updateMenuStyle menu =
-    --         updateWhenWithAvailable
-    --             (\available ->
-    --                 { available | menuStyle = Animation.update msg available.menuStyle }
-    --             )
-    --             |> defaultTransition menu
-    --
-    --     updateSlideButtonStyle menu =
-    --         updateWhenWithSlideButton
-    --             (\slideButton ->
-    --                 { slideButton | slideButtonStyle = Animation.update msg slideButton.slideButtonStyle }
-    --             )
-    --             |> defaultTransition menu
-    --
-    --     updateInlineEditorStyle mode =
-    --         updateWhenWithInlineEditor
-    --             (\editor ->
-    --                 { editor | inlineEditorStyle = Animation.update msg editor.inlineEditorStyle }
-    --             )
-    --             |> defaultTransition mode
-    -- in
-    --     ( { model
-    --         | menu = (updateMenuStyle >> updateSlideButtonStyle) model.menu
-    --         , mode = updateInlineEditorStyle model.mode
-    --       }
-    --     , Cmd.none
-    --     )
-    ( model, Cmd.none )
+    let
+        updateMenuStyle menu =
+            { menu | menuStyle = Animation.update msg menu.menuStyle }
+
+        updateSlideButtonStyle slideButtonStyle =
+            Animation.update msg slideButtonStyle
+
+        updateInlineEditorStyle inlineEditorStyle =
+            Animation.update msg inlineEditorStyle
+    in
+        ( { model
+            | menu =
+                mapSlideButtonStyle updateSlideButtonStyle model.menu
+                    |> mapMenu updateMenuStyle
+            , mode = mapInlineEditorStyle updateInlineEditorStyle model.mode
+          }
+        , Cmd.none
+        )
 
 
 {-| Forward on the content service messages to it.
 -}
 updateCSEApi : CSE.Msg -> Model -> ( Model, Cmd Msg )
 updateCSEApi cseMsg model =
-    -- (CSE.update cseCallbacks cseMsg model)
-    ( model, Cmd.none )
+    (CSE.update cseCallbacks cseMsg model)
 
 
 {-| Forward on the content service messages to it.
 -}
 updateContentServiceApi : Content.Service.Msg -> Model -> ( Model, Cmd Msg )
 updateContentServiceApi msg model =
-    -- (Content.Service.update csCallbacks msg model)
-    ( model, Cmd.none )
+    (Content.Service.update csCallbacks msg model)
 
 
 {-| Forward on the overlay msg to get an update from it.
@@ -570,7 +669,22 @@ updateOverlayMsg msg model =
     --
     --         Nothing ->
     --             ( model, Cmd.none )
-    ( model, Cmd.none )
+    case model.mode of
+        Markdown state ->
+            let
+                ( newOverlay, overlayCmds, maybeOutMsg ) =
+                    Overlay.update msg (ModeState.untag state).selected.overlay
+            in
+                ( { model | mode = mapSelectedModel (\selected -> { selected | overlay = newOverlay }) model.mode }, Cmd.none )
+
+        Preview state ->
+            ( model, Cmd.none )
+
+        Wysiwyg state ->
+            ( model, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 {-| Fetch the content by its slug.
@@ -578,19 +692,17 @@ Fetch the content tree.
 -}
 updateInit : Model -> ( Model, Cmd Msg )
 updateInit model =
-    -- ( model
-    -- , Cmd.batch
-    --     [ CSE.invokeRetrieveTree model.config.apiRoot CSEApi
-    --     , CSE.invokeRetrieveWithContainerBySlug model.config.apiRoot CSEApi "overview"
-    --     ]
-    -- )
-    ( model, Cmd.none )
+    ( model
+    , Cmd.batch
+        [ CSE.invokeRetrieveTree model.config.apiRoot CSEApi
+        , CSE.invokeRetrieveWithContainerBySlug model.config.apiRoot CSEApi "overview"
+        ]
+    )
 
 
 updateSelectLocation : String -> Model -> ( Model, Cmd Msg )
 updateSelectLocation location model =
-    -- ( model, CSE.invokeRetrieveWithContainerBySlug model.config.apiRoot CSEApi location )
-    ( model, Cmd.none )
+    ( model, CSE.invokeRetrieveWithContainerBySlug model.config.apiRoot CSEApi location )
 
 
 {-| When in explore mode,
@@ -616,7 +728,22 @@ updateMouseOverContent zipper domState model =
     --     ( { model | mode = exploreToMarkdown |> defaultTransition model.mode }
     --     , Cmd.none
     --     )
-    ( model, Cmd.none )
+    case model.mode of
+        Explore state ->
+            ( { model
+                | mode =
+                    toMarkdown
+                        { selectedContent = zipper
+                        , overlay = Overlay.makeAware domState.rect Overlay.init
+                        , editedValue = Nothing
+                        }
+                        state
+              }
+            , Cmd.none
+            )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 updateMouseOutContent : Model -> ( Model, Cmd Msg )
@@ -628,7 +755,12 @@ updateMouseOutContent model =
     --   }
     -- , Cmd.none
     -- )
-    ( model, Cmd.none )
+    case model.mode of
+        Markdown state ->
+            ( { model | mode = toExplore state }, Cmd.none )
+
+        _ ->
+            ( model, Cmd.none )
 
 
 {-| When there is a selected content model with an overlay,
@@ -636,46 +768,44 @@ forward changes in the content models rendered size to the overlay.
 -}
 updateResize : ResizeEvent -> Model -> ( Model, Cmd Msg )
 updateResize size model =
-    -- ( { model
-    --     | mode =
-    --         updateWhenWithSelectedModel
-    --             (\selected ->
-    --                 let
-    --                     contentModel =
-    --                         contentZipperToModel selected.selectedContent
-    --
-    --                     id =
-    --                         "inline__wrapper" ++ asUUID contentModel
-    --                 in
-    --                     { selected
-    --                         | overlay =
-    --                             if id == size.id then
-    --                                 Overlay.resize size selected.overlay
-    --                             else
-    --                                 selected.overlay
-    --                     }
-    --             )
-    --             |> defaultTransition model.mode
-    --   }
-    -- , Cmd.none
-    -- )
-    ( model, Cmd.none )
+    ( { model
+        | mode =
+            mapSelectedModel
+                (\selected ->
+                    let
+                        contentModel =
+                            contentZipperToModel selected.selectedContent
+
+                        id =
+                            "inline__wrapper" ++ asUUID contentModel
+                    in
+                        { selected
+                            | overlay =
+                                if id == size.id then
+                                    Overlay.resize size selected.overlay
+                                else
+                                    selected.overlay
+                        }
+                )
+                model.mode
+      }
+    , Cmd.none
+    )
 
 
 updateBodyScroll : Move -> Model -> ( Model, Cmd Msg )
 updateBodyScroll ( from, to ) model =
-    -- ( { model
-    --     | yOffset = to
-    --     , mode =
-    --         updateWhenWithSelectedModel
-    --             (\selected ->
-    --                 { selected | overlay = Overlay.scroll ( from, to ) selected.overlay }
-    --             )
-    --             |> defaultTransition model.mode
-    --   }
-    -- , Cmd.none
-    -- )
-    ( model, Cmd.none )
+    ( { model
+        | yOffset = to
+        , mode =
+            mapSelectedModel
+                (\selected ->
+                    { selected | overlay = Overlay.scroll ( from, to ) selected.overlay }
+                )
+                model.mode
+      }
+    , Cmd.none
+    )
 
 
 
@@ -705,70 +835,78 @@ updateContentTreeMsg msg model =
     --
     --         Nothing ->
     --             ( model, Cmd.none )
-    ( model, Cmd.none )
+    let
+        navigateCmd (ContentTree.Navigate location) =
+            CSE.invokeRetrieveWithContainerBySlug model.config.apiRoot CSEApi location
+
+        contentTreeAndNav state =
+            let
+                ( newTree, outMsg ) =
+                    ContentTree.update msg (MenuState.untag state).controls.contentTree
+            in
+                ( { model | menu = mapMenu (\menu -> { menu | contentTree = newTree }) model.menu }
+                , Maybe.map navigateCmd outMsg
+                    |> Maybe.withDefault Cmd.none
+                )
+    in
+        case model.menu of
+            Available state ->
+                contentTreeAndNav state
+
+            Open state ->
+                contentTreeAndNav state
+
+            _ ->
+                ( model, Cmd.none )
 
 
 updateControlBarUpdate : ControlBar.Msg -> Model -> ( Model, Cmd Msg )
 updateControlBarUpdate msg model =
-    -- ( { model
-    --     | menu =
-    --         updateWhenWithAvailable
-    --             (\available -> { available | controlBar = ControlBar.update msg available.controlBar })
-    --             |> defaultTransition model.menu
-    --   }
-    -- , Cmd.none
-    -- )
-    ( model, Cmd.none )
+    ( { model | menu = mapMenu (\menu -> { menu | controlBar = ControlBar.update msg menu.controlBar }) model.menu }
+    , Cmd.none
+    )
 
 
 updateToggleMenu : Model -> ( Model, Cmd Msg )
 updateToggleMenu model =
-    -- let
-    --     updateSlideButtonStyle style =
-    --         updateWhenWithSlideButton
-    --             (\button ->
-    --                 { button
-    --                     | slideButtonStyle =
-    --                         animateStyle slideButtonEasing button.slideButtonStyle style
-    --                 }
-    --             )
-    --
-    --     updateMenuStyle style =
-    --         updateWhenWithAvailable
-    --             (\available ->
-    --                 { available
-    --                     | menuStyle = animateStyle menuEasing available.menuStyle style
-    --                 }
-    --             )
-    -- in
-    --     case model.menu of
-    --         Available _ _ ->
-    --             ( { model
-    --                 | menu =
-    --                     ((updateSlideButtonStyle slideButtonOpenStyle)
-    --                         >&&> (updateMenuStyle menuOpenStyle)
-    --                         >&&> menuToggle
-    --                     )
-    --                         |> defaultTransition model.menu
-    --               }
-    --             , Cmd.none
-    --             )
-    --
-    --         Open _ _ ->
-    --             ( { model
-    --                 | menu =
-    --                     ((updateSlideButtonStyle slideButtonClosedStyle)
-    --                         >&&> (updateMenuStyle menuClosedStyle)
-    --                         >&&> menuToggle
-    --                     )
-    --                         |> defaultTransition model.menu
-    --               }
-    --             , Cmd.none
-    --             )
-    --
-    --         _ ->
-    --             ( model, Cmd.none )
-    ( model, Cmd.none )
+    let
+        updateSlideButtonStyle toStyle fromStyle =
+            animateStyle slideButtonEasing fromStyle toStyle
+
+        updateMenuStyle style menu =
+            { menu | menuStyle = animateStyle menuEasing menu.menuStyle style }
+    in
+        case model.menu of
+            Available state ->
+                -- ((updateSlideButtonStyle slideButtonOpenStyle)
+                --     >&&> (updateMenuStyle menuOpenStyle)
+                --     >&&> menuToggle
+                -- )
+                ( { model
+                    | menu =
+                        toOpen state
+                            |> mapSlideButtonStyle (updateSlideButtonStyle slideButtonOpenStyle)
+                            |> mapMenu (updateMenuStyle menuOpenStyle)
+                  }
+                , Cmd.none
+                )
+
+            Open state ->
+                -- ((updateSlideButtonStyle slideButtonClosedStyle)
+                --     >&&> (updateMenuStyle menuClosedStyle)
+                --     >&&> menuToggle
+                -- )
+                ( { model
+                    | menu =
+                        toAvailable state
+                            |> mapSlideButtonStyle (updateSlideButtonStyle slideButtonClosedStyle)
+                            |> mapMenu (updateMenuStyle menuClosedStyle)
+                  }
+                , Cmd.none
+                )
+
+            _ ->
+                ( model, Cmd.none )
 
 
 updateControlBar : ControlBar.OutMsg -> Model -> ( Model, Cmd Msg )
@@ -1047,70 +1185,80 @@ linker applicationContextRoot slug =
 
 editor : ModeState -> Editor Msg
 editor mode zipper =
-    -- let
-    --     contentModel =
-    --         contentZipperToModel zipper
-    --
-    --     contentId =
-    --         asUUID contentModel
-    --
-    --     markdownView : ContentModel -> Html Msg
-    --     markdownView contentModel =
-    --         asMarkdown contentModel
-    --             |> Markdown.toHtml Nothing
-    --             |> Html.div
-    --                 [ domMetricsOn (MouseOverContent zipper) "mouseover"
-    --                 ]
-    --
-    --     defaultContent =
-    --         markdownView contentModel
-    --
-    --     htmlContent =
-    --         mapWhenWithSelectedModel
-    --             (\selected ->
-    --                 if (asUUID (contentZipperToModel selected.selectedContent) == contentId) then
-    --                     case selected.editedValue of
-    --                         Just value ->
-    --                             markdownView <| withMarkdown contentModel value
-    --
-    --                         Nothing ->
-    --                             defaultContent
-    --                 else
-    --                     defaultContent
-    --             )
-    --             mode
-    --             |> Maybe.withDefault (defaultContent)
-    --
-    --     defaultAttributes =
-    --         [ class "editor-inline__wrapper" ]
-    --
-    --     attributes =
-    --         mapWhenWithSelectedModel
-    --             (\selected ->
-    --                 if (asUUID (contentZipperToModel selected.selectedContent) == contentId) then
-    --                     [ class "editor-inline__wrapper"
-    --                     , class "watch-resize"
-    --                     , id <| "inline__wrapper" ++ asUUID contentModel
-    --                     ]
-    --                 else
-    --                     defaultAttributes
-    --             )
-    --             mode
-    --             |> Maybe.withDefault (defaultAttributes)
-    -- in
-    --     div
-    --         attributes
-    --         [ htmlContent
-    --
-    --         -- This is where the inline editor must go.
-    --         -- , div
-    --         --     (Animation.render model.inlineEditorStyle
-    --         --         ++ [ class "editor-inline__editor" ]
-    --         --     )
-    --         --     [ content
-    --         --     ]
-    --         ]
-    div [] []
+    let
+        contentModel =
+            contentZipperToModel zipper
+
+        contentId =
+            asUUID contentModel
+
+        markdownView : ContentModel -> Html Msg
+        markdownView contentModel =
+            asMarkdown contentModel
+                |> Markdown.toHtml Nothing
+                |> Html.div
+                    [ domMetricsOn (MouseOverContent zipper) "mouseover"
+                    ]
+
+        defaultContent =
+            markdownView contentModel
+
+        defaultAttributes =
+            [ class "editor-inline__wrapper" ]
+
+        htmlContent selected =
+            if (asUUID (contentZipperToModel selected.selectedContent) == contentId) then
+                case selected.editedValue of
+                    Just value ->
+                        markdownView <| withMarkdown contentModel value
+
+                    Nothing ->
+                        defaultContent
+            else
+                defaultContent
+
+        attributes selected =
+            if (asUUID (contentZipperToModel selected.selectedContent) == contentId) then
+                [ class "editor-inline__wrapper"
+                , class "watch-resize"
+                , id <| "inline__wrapper" ++ asUUID contentModel
+                ]
+            else
+                defaultAttributes
+    in
+        -- This is where the inline editor must go.
+        -- , div
+        --     (Animation.render model.inlineEditorStyle
+        --         ++ [ class "editor-inline__editor" ]
+        --     )
+        --     [ content
+        --     ]
+        -- div attributes
+        -- [ htmlContent ]
+        case mode of
+            Markdown state ->
+                let
+                    untagged =
+                        ModeState.untag state
+                in
+                    div (attributes untagged.selected) [ htmlContent untagged.selected ]
+
+            Preview state ->
+                let
+                    untagged =
+                        ModeState.untag state
+                in
+                    div (attributes untagged.selected) [ htmlContent untagged.selected ]
+
+            Wysiwyg state ->
+                let
+                    untagged =
+                        ModeState.untag state
+                in
+                    div (attributes untagged.selected) [ htmlContent untagged.selected ]
+
+            _ ->
+                div defaultAttributes [ defaultContent ]
 
 
 
