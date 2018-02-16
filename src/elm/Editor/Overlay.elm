@@ -40,6 +40,7 @@ import Editor.OverlayState as OverlayState
 import Html.Attributes exposing (class, href)
 import Html.Events as Events
 import Html exposing (Html, text, div, button, textarea)
+import Mouse
 import Optional exposing (optional)
 import RectUtils exposing (enlarge, noRect, zeroPosition, translate)
 import ResizeObserver exposing (ResizeEvent)
@@ -56,6 +57,7 @@ type Msg
     | MouseOut
     | ClickOut
     | UpdateContent String
+    | MouseMove Mouse.Position
 
 
 type OutMsg
@@ -107,7 +109,7 @@ subscriptions model =
     in
         case model.state of
             Aware state ->
-                overlayAnimSub (untag state)
+                Sub.batch [ overlayAnimSub (untag state), Mouse.moves MouseMove ]
 
             Active state ->
                 Sub.batch [ overlayAnimSub (untag state), controlBarSub (untag state) ]
@@ -156,6 +158,9 @@ update msg model =
 
                 MouseOut ->
                     updateMouseOut model
+
+                MouseMove position ->
+                    updateMouseMove position model
 
                 _ ->
                     noop model
@@ -249,6 +254,34 @@ updateMouseOut model =
     , Cmd.none
     , (Just Closed)
     )
+
+
+isWithin : Mouse.Position -> Rectangle -> Bool
+isWithin position rectangle =
+    (position.x > round rectangle.left)
+        && (position.x < round (rectangle.left + rectangle.width))
+        && (position.y > round rectangle.top)
+        && (position.y < round (rectangle.top + rectangle.height))
+
+
+updateMouseMove : Mouse.Position -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
+updateMouseMove position model =
+    case model.state of
+        Aware state ->
+            let
+                untagged =
+                    untag state
+            in
+                if (isWithin position untagged.position.rect) then
+                    ( model, Cmd.none, Nothing )
+                else
+                    ( { model | state = hidden }
+                    , Cmd.none
+                    , (Just Closed)
+                    )
+
+        _ ->
+            ( model, Cmd.none, Nothing )
 
 
 updateClickOut : Model -> ( Model, Cmd Msg, Maybe OutMsg )
