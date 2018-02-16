@@ -126,14 +126,14 @@ subscriptions model =
 debugFilter : Msg -> Msg
 debugFilter msg =
     case msg of
-        Animate _ ->
-            msg
-
-        ControlBar _ ->
-            msg
-
+        -- Animate _ ->
+        --     msg
+        --
+        -- ControlBar _ ->
+        --     msg
         _ ->
-            Debug.log "overlay" msg
+            -- Debug.log "overlay" msg
+            msg
 
 
 noop model =

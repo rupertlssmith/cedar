@@ -142,7 +142,7 @@ location2messages location =
     if location.hash == "" || location.hash == "#/welcome" then
         []
     else
-        CE.location2messages (Debug.log "location2messages" location) |> List.map ContentEditorMsg
+        CE.location2messages location |> List.map ContentEditorMsg
 
 
 
@@ -152,14 +152,14 @@ location2messages location =
 debugFilter : Msg -> Msg
 debugFilter msg =
     case msg of
-        WelcomeMsg _ ->
-            msg
-
-        ContentEditorMsg _ ->
-            msg
-
+        -- WelcomeMsg _ ->
+        --     msg
+        --
+        -- ContentEditorMsg _ ->
+        --     msg
         _ ->
-            Debug.log "main" msg
+            -- Debug.log "main" msg
+            msg
 
 
 {-| Processes state updates for the content editor.
