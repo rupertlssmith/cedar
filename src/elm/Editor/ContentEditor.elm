@@ -236,7 +236,7 @@ cseCallbacks =
 
 contentLoaded : Content -> Model -> ( Model, Cmd Msg )
 contentLoaded content model =
-    case (Debug.log "contentLoaded" model.mode) of
+    case model.mode of
         Loading state ->
             ( { model | mode = toExploreWithContent content state }, Cmd.none )
 
@@ -273,7 +273,7 @@ treeFetched content model =
                 _ ->
                     Nothing
     in
-        case (Debug.log "treeFetched" model.menu) of
+        case model.menu of
             Disabled state ->
                 ( { model
                     | menu =
@@ -382,7 +382,8 @@ debugFilter msg =
         -- MouseOverContent _ _ ->
         --     msg
         _ ->
-            Debug.log "contentEditor" msg
+            -- Debug.log "contentEditor" msg
+            msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -478,7 +479,7 @@ updateContentServiceApi msg model =
 
 updateModeWithOverlay : String -> Float -> Overlay.OutMsg -> ModeState -> ( ModeState, Cmd Msg )
 updateModeWithOverlay apiRoot yOffset outmsg mode =
-    case (Debug.log "updateModeWithOverlay" outmsg) of
+    case outmsg of
         Overlay.Closed ->
             case mode of
                 Markdown state ->
@@ -735,9 +736,6 @@ updateContentTreeMsg msg model =
             let
                 ( newTree, outMsg ) =
                     ContentTree.update msg (MenuState.untag state).controls.contentTree
-
-                _ =
-                    Debug.log "updateContentTreeMsg:outmsg" outMsg
             in
                 ( { model | menu = mapMenu (\menu -> { menu | contentTree = newTree }) model.menu }
                 , Maybe.map navigateCmd outMsg

@@ -63,7 +63,7 @@ callbacks =
 
 update : Callbacks model msg -> Msg -> model -> ( model, Cmd msg )
 update callbacks action model =
-    case (Debug.log "content.api" action) of
+    case action of
         RetrieveWithContainer result ->
             (case result of
                 Ok content ->
