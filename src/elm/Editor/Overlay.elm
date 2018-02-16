@@ -307,13 +307,19 @@ makeActive yOffset value model =
 
         controlBar =
             ControlBar.show initControlBar
+
+        updateStyle position =
+            { position
+                | overlayStyle = newOverlayStyle position.overlayStyle position.rect
+                , yOffset = yOffset
+            }
     in
         case model.state of
             Aware state ->
-                { model | state = toActiveWithControlBarAndValue controlBar value state }
+                { model | state = toActiveWithControlBarAndValue controlBar value state |> mapPosition updateStyle }
 
             Inactive state ->
-                { model | state = toActiveWithValue value state }
+                { model | state = toActiveWithValue value state |> mapPosition updateStyle }
 
             _ ->
                 model
