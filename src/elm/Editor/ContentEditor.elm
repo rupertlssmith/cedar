@@ -386,57 +386,64 @@ debugFilter msg =
             msg
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> ( Model, Cmd Msg, Cmd Auth.Msg )
 update action model =
     case (debugFilter action) of
         Animate msg ->
-            ( updateAnimate msg model, Cmd.none )
+            ( updateAnimate msg model, Cmd.none, Cmd.none )
 
         CSEApi msg ->
             updateCSEApi msg model
+                |> Update3.addOutMsg Cmd.none
 
         ContentServiceApi msg ->
             updateContentServiceApi msg model
+                |> Update3.addOutMsg Cmd.none
 
         OverlayMsg msg ->
             updateOverlayMsg msg model
+                |> Update3.addOutMsg Cmd.none
 
         Init ->
             updateInit model
+                |> Update3.addOutMsg Cmd.none
 
         SelectLocation location ->
             updateSelectLocation location model
+                |> Update3.addOutMsg Cmd.none
 
         MouseOverContent zipper domState ->
-            ( updateMouseOverContent zipper domState model, Cmd.none )
+            ( updateMouseOverContent zipper domState model, Cmd.none, Cmd.none )
 
         MouseOutContent ->
-            ( updateMouseOutContent model, Cmd.none )
+            ( updateMouseOutContent model, Cmd.none, Cmd.none )
 
         Resize size ->
-            ( updateResize size model, Cmd.none )
+            ( updateResize size model, Cmd.none, Cmd.none )
 
         BodyScroll move ->
-            ( updateBodyScroll move model, Cmd.none )
+            ( updateBodyScroll move model, Cmd.none, Cmd.none )
 
         ContentTreeMsg msg ->
             updateContentTreeMsg msg model
+                |> Update3.addOutMsg Cmd.none
 
         ControlBarUpdate msg ->
-            ( updateControlBarUpdate msg model, Cmd.none )
+            ( updateControlBarUpdate msg model, Cmd.none, Cmd.none )
 
         ToggleMenu ->
-            ( updateToggleMenu model, Cmd.none )
+            ( updateToggleMenu model, Cmd.none, Cmd.none )
 
         ControlBar outMsg ->
             updateControlBar outMsg model
+                |> Update3.addOutMsg Cmd.none
 
         LogOut ->
             --( model, Auth.logout )
-            ( model, Cmd.none )
+            ( model, Cmd.none, Cmd.none )
 
         Error _ ->
-            ( model, Cmd.none )
+            ( model, Cmd.none, Cmd.none )
 
 
 {-| Update animations when animated styles are available.

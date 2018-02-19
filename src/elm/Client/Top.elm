@@ -182,8 +182,9 @@ update action model =
                 |> Tuple.mapFirst (\welcome -> { model | session = FailedAuth welcome })
 
         ( Authenticated state, ContentEditorMsg msg ) ->
-            Update2.lift .contentEditor (\x m -> { m | contentEditor = x }) ContentEditorMsg CE.update msg state
-                |> Tuple.mapFirst (\contentEditor -> { model | session = Authenticated contentEditor })
+            Update3.lift .contentEditor (\x m -> { m | contentEditor = x }) ContentEditorMsg CE.update msg state
+                |> Update3.mapModel (\contentEditor -> { model | session = Authenticated contentEditor })
+                |> Update3.evalCmds AuthMsg
 
         ( _, _ ) ->
             ( model, Cmd.none )
