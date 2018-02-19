@@ -390,7 +390,7 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case (debugFilter action) of
         Animate msg ->
-            updateAnimate msg model
+            ( updateAnimate msg model, Cmd.none )
 
         CSEApi msg ->
             updateCSEApi msg model
@@ -408,25 +408,25 @@ update action model =
             updateSelectLocation location model
 
         MouseOverContent zipper domState ->
-            updateMouseOverContent zipper domState model
+            ( updateMouseOverContent zipper domState model, Cmd.none )
 
         MouseOutContent ->
-            updateMouseOutContent model
+            ( updateMouseOutContent model, Cmd.none )
 
         Resize size ->
-            updateResize size model
+            ( updateResize size model, Cmd.none )
 
         BodyScroll move ->
-            updateBodyScroll move model
+            ( updateBodyScroll move model, Cmd.none )
 
         ContentTreeMsg msg ->
             updateContentTreeMsg msg model
 
         ControlBarUpdate msg ->
-            updateControlBarUpdate msg model
+            ( updateControlBarUpdate msg model, Cmd.none )
 
         ToggleMenu ->
-            updateToggleMenu model
+            ( updateToggleMenu model, Cmd.none )
 
         ControlBar outMsg ->
             updateControlBar outMsg model
@@ -441,7 +441,7 @@ update action model =
 
 {-| Update animations when animated styles are available.
 -}
-updateAnimate : Animation.Msg -> Model -> ( Model, Cmd Msg )
+updateAnimate : Animation.Msg -> Model -> Model
 updateAnimate msg model =
     let
         updateMenuStyle menu =
@@ -453,14 +453,12 @@ updateAnimate msg model =
         updateInlineEditorStyle inlineEditorStyle =
             Animation.update msg inlineEditorStyle
     in
-        ( { model
+        { model
             | menu =
                 mapSlideButtonStyle updateSlideButtonStyle model.menu
                     |> mapMenu updateMenuStyle
             , mode = mapInlineEditorStyle updateInlineEditorStyle model.mode
-          }
-        , Cmd.none
-        )
+        }
 
 
 {-| Forward on the content service messages to it.
@@ -647,11 +645,11 @@ switch to markdown mode with the content model
 and an overlay in the Aware state.
 Ask the resize observer to observe the content under the mouse.
 -}
-updateMouseOverContent : Zipper Content -> DOMState -> Model -> ( Model, Cmd Msg )
+updateMouseOverContent : Zipper Content -> DOMState -> Model -> Model
 updateMouseOverContent zipper domState model =
     case model.mode of
         Explore state ->
-            ( { model
+            { model
                 | mode =
                     toMarkdownWithSelectedModel
                         { selectedContent = zipper
@@ -659,30 +657,28 @@ updateMouseOverContent zipper domState model =
                         , editedValue = Nothing
                         }
                         state
-              }
-            , Cmd.none
-            )
+            }
 
         _ ->
-            ( model, Cmd.none )
+            model
 
 
-updateMouseOutContent : Model -> ( Model, Cmd Msg )
+updateMouseOutContent : Model -> Model
 updateMouseOutContent model =
     case model.mode of
         Markdown state ->
-            ( { model | mode = toExplore state }, Cmd.none )
+            { model | mode = toExplore state }
 
         _ ->
-            ( model, Cmd.none )
+            model
 
 
 {-| When there is a selected content model with an overlay,
 forward changes in the content models rendered size to the overlay.
 -}
-updateResize : ResizeEvent -> Model -> ( Model, Cmd Msg )
+updateResize : ResizeEvent -> Model -> Model
 updateResize size model =
-    ( { model
+    { model
         | mode =
             mapSelectedModel
                 (\selected ->
@@ -702,14 +698,12 @@ updateResize size model =
                         }
                 )
                 model.mode
-      }
-    , Cmd.none
-    )
+    }
 
 
-updateBodyScroll : Move -> Model -> ( Model, Cmd Msg )
+updateBodyScroll : Move -> Model -> Model
 updateBodyScroll ( from, to ) model =
-    ( { model
+    { model
         | yOffset = to
         , mode =
             mapSelectedModel
@@ -717,9 +711,7 @@ updateBodyScroll ( from, to ) model =
                     { selected | overlay = Overlay.scroll ( from, to ) selected.overlay }
                 )
                 model.mode
-      }
-    , Cmd.none
-    )
+    }
 
 
 
@@ -753,14 +745,12 @@ updateContentTreeMsg msg model =
                 ( model, Cmd.none )
 
 
-updateControlBarUpdate : ControlBar.Msg -> Model -> ( Model, Cmd Msg )
+updateControlBarUpdate : ControlBar.Msg -> Model -> Model
 updateControlBarUpdate msg model =
-    ( { model | menu = mapMenu (\menu -> { menu | controlBar = ControlBar.update msg menu.controlBar }) model.menu }
-    , Cmd.none
-    )
+    { model | menu = mapMenu (\menu -> { menu | controlBar = ControlBar.update msg menu.controlBar }) model.menu }
 
 
-updateToggleMenu : Model -> ( Model, Cmd Msg )
+updateToggleMenu : Model -> Model
 updateToggleMenu model =
     let
         updateSlideButtonStyle toStyle fromStyle =
@@ -771,27 +761,23 @@ updateToggleMenu model =
     in
         case model.menu of
             Available state ->
-                ( { model
+                { model
                     | menu =
                         toOpen state
                             |> mapSlideButtonStyle (updateSlideButtonStyle slideButtonOpenStyle)
                             |> mapMenu (updateMenuStyle menuOpenStyle)
-                  }
-                , Cmd.none
-                )
+                }
 
             Open state ->
-                ( { model
+                { model
                     | menu =
                         toAvailable state
                             |> mapSlideButtonStyle (updateSlideButtonStyle slideButtonClosedStyle)
                             |> mapMenu (updateMenuStyle menuClosedStyle)
-                  }
-                , Cmd.none
-                )
+                }
 
             _ ->
-                ( model, Cmd.none )
+                model
 
 
 updateControlBar : ControlBar.OutMsg -> Model -> ( Model, Cmd Msg )
