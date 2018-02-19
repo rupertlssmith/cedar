@@ -440,7 +440,7 @@ update action model =
 
         LogOut ->
             --( model, Auth.logout )
-            ( model, Cmd.none, Cmd.none )
+            ( model, Cmd.none, Auth.logout )
 
         Error _ ->
             ( model, Cmd.none, Cmd.none )
