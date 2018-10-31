@@ -12,11 +12,9 @@ import Dict exposing (Dict)
 import Editor.ContentEditor as CE
 import Html exposing (Html)
 import Maybe.Extra
-import Navigation
 import Optional exposing (optional, required, when)
 import Renderer.Flexi exposing (Layout, Template)
 import ResizeObserver
-import RouteUrl as Routing
 import ScrollPort
 import Update2
 import Update3
