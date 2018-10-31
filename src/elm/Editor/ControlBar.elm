@@ -1,24 +1,23 @@
-module Editor.ControlBar
-    exposing
-        ( OutMsg(..)
-        , Msg
-        , Model
-        , init
-        , initWithAnimation
-        , subscriptions
-        , update
-        , show
-        , hide
-        , view
-        )
+module Editor.ControlBar exposing
+    ( Model
+    , Msg
+    , OutMsg(..)
+    , hide
+    , init
+    , initWithAnimation
+    , show
+    , subscriptions
+    , update
+    , view
+    )
 
-import Animation exposing (px, percent, Property, Interpolation, State)
+import Animation exposing (Interpolation, Property, State, percent, px)
 import AnimationUtil exposing (animateStyle)
 import Ease
-import Html exposing (Html, div, li, ul, i, text, span)
+import Html exposing (Html, div, i, li, span, text, ul)
 import Html.Attributes exposing (class, href)
 import Html.Events exposing (onClick)
-import Time exposing (second, Time)
+import Time exposing (Time, second)
 
 
 type OutMsg
@@ -75,27 +74,29 @@ initWithAnimation id hiddenStyle shownStyle showEasing hideEasing show buttons =
         style =
             if show then
                 Animation.style shownStyle
+
             else
                 Animation.style hiddenStyle
     in
-        { id = id
-        , shown = show
-        , buttons = buttons
-        , animation =
-            Just
-                { style = style
-                , hiddenStyle = hiddenStyle
-                , shownStyle = shownStyle
-                , showEasing = showEasing
-                , hideEasing = hideEasing
-                }
-        }
+    { id = id
+    , shown = show
+    , buttons = buttons
+    , animation =
+        Just
+            { style = style
+            , hiddenStyle = hiddenStyle
+            , shownStyle = shownStyle
+            , showEasing = showEasing
+            , hideEasing = hideEasing
+            }
+    }
 
 
 show : Model -> Model
 show model =
     if model.shown then
         model
+
     else
         { model
             | shown = True
@@ -115,6 +116,7 @@ hide : Model -> Model
 hide model =
     if not model.shown then
         model
+
     else
         { model
             | shown = False
@@ -134,15 +136,14 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Animate id msg ->
-            ({ model | animation = Maybe.map (\spec -> { spec | style = Animation.update msg spec.style }) model.animation })
+            { model | animation = Maybe.map (\spec -> { spec | style = Animation.update msg spec.style }) model.animation }
 
 
 view : String -> Model -> Html OutMsg
 view barDivClass model =
     div
-        ((Maybe.withDefault []
+        (Maybe.withDefault []
             (Maybe.map (.style >> Animation.render) model.animation)
-         )
             ++ [ class barDivClass
                ]
         )

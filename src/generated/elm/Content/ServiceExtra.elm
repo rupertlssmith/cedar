@@ -1,14 +1,13 @@
-module Content.ServiceExtra exposing (..)
+module Content.ServiceExtra exposing (Callbacks, Msg(..), callbacks, invokeRetrieveTree, invokeRetrieveWithContainer, invokeRetrieveWithContainerBySlug, retrieveTreeTask, retrieveWithContainerBySlugTask, retrieveWithContainerTask, routes, update)
 
-import Platform.Cmd exposing (Cmd)
-import Result
-import Http
 import Http
 import Http.Decorators
 import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode exposing (..)
-import Task exposing (Task)
 import Model exposing (..)
+import Platform.Cmd exposing (Cmd)
+import Result
+import Task exposing (Task)
 
 
 type Msg
@@ -63,9 +62,9 @@ callbacks =
 
 update : Callbacks model msg -> Msg -> model -> ( model, Cmd msg )
 update callbacks action model =
-    case (Debug.log "content.api" action) of
+    case Debug.log "content.api" action of
         RetrieveWithContainer result ->
-            (case result of
+            case result of
                 Ok content ->
                     callbacks.retrieveWithContainer content model
 
@@ -77,11 +76,10 @@ update callbacks action model =
                         ( modelGeneral, cmdGeneral ) =
                             callbacks.error httpError modelSpecific
                     in
-                        ( modelGeneral, Cmd.batch [ cmdSpecific, cmdGeneral ] )
-            )
+                    ( modelGeneral, Cmd.batch [ cmdSpecific, cmdGeneral ] )
 
         RetrieveWithContainerBySlug result ->
-            (case result of
+            case result of
                 Ok content ->
                     callbacks.retrieveWithContainerBySlug content model
 
@@ -93,11 +91,10 @@ update callbacks action model =
                         ( modelGeneral, cmdGeneral ) =
                             callbacks.error httpError modelSpecific
                     in
-                        ( modelGeneral, Cmd.batch [ cmdSpecific, cmdGeneral ] )
-            )
+                    ( modelGeneral, Cmd.batch [ cmdSpecific, cmdGeneral ] )
 
         RetrieveTree result ->
-            (case result of
+            case result of
                 Ok content ->
                     callbacks.retrieveTree content model
 
@@ -109,8 +106,7 @@ update callbacks action model =
                         ( modelGeneral, cmdGeneral ) =
                             callbacks.error httpError modelSpecific
                     in
-                        ( modelGeneral, Cmd.batch [ cmdSpecific, cmdGeneral ] )
-            )
+                    ( modelGeneral, Cmd.batch [ cmdSpecific, cmdGeneral ] )
 
 
 routes root =

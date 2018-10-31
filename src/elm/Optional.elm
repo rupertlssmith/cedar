@@ -1,10 +1,11 @@
-module Optional exposing (when, required, optional)
+module Optional exposing (optional, required, when)
 
 
 when : Bool -> a -> Maybe a
 when condition value =
-    if (condition) then
+    if condition then
         Just value
+
     else
         Nothing
 

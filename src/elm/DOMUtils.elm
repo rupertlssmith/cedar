@@ -3,7 +3,7 @@ module DOMUtils exposing (DOMState, domMetricsOn)
 import DOM
 import Html exposing (Attribute)
 import Html.Events
-import Json.Decode as Json exposing (field, at)
+import Json.Decode as Json exposing (at, field)
 
 
 type alias Metrics =
@@ -32,20 +32,20 @@ computeMetrics g =
         set x y =
             ( x - rect.left, y - rect.top ) |> Just
     in
-        (case ( g.clientX, g.clientY, g.touchX, g.touchY ) of
-            ( Just 0.0, Just 0.0, _, _ ) ->
-                ( rect.width / 2.0, rect.height / 2.0 ) |> Just
+    (case ( g.clientX, g.clientY, g.touchX, g.touchY ) of
+        ( Just 0.0, Just 0.0, _, _ ) ->
+            ( rect.width / 2.0, rect.height / 2.0 ) |> Just
 
-            ( Just x, Just y, _, _ ) ->
-                set x y
+        ( Just x, Just y, _, _ ) ->
+            set x y
 
-            ( _, _, Just x, Just y ) ->
-                set x y
+        ( _, _, Just x, Just y ) ->
+            set x y
 
-            _ ->
-                Nothing
-        )
-            |> Maybe.map (\( x, y ) -> Metrics rect x y)
+        _ ->
+            Nothing
+    )
+        |> Maybe.map (\( x, y ) -> Metrics rect x y)
 
 
 domMetricsOn : (DOMState -> m) -> String -> Attribute m

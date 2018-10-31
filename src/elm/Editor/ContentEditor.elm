@@ -1,50 +1,49 @@
-module Editor.ContentEditor
-    exposing
-        ( Msg
-        , Model
-        , view
-        , update
-        , subscriptions
-        , init
-        , delta2url
-        , location2messages
-        )
+module Editor.ContentEditor exposing
+    ( Model
+    , Msg
+    , delta2url
+    , init
+    , location2messages
+    , subscriptions
+    , update
+    , view
+    )
 
-import Animation exposing (px, turn, Property, Interpolation, State)
+import Animation exposing (Interpolation, Property, State, px, turn)
 import AnimationUtil exposing (animateStyle)
 import Auth
 import Color
 import Config exposing (Config)
 import Content.Service
 import Content.ServiceExtra as CSE
-import Dict exposing (Dict)
 import DOM exposing (Rectangle)
 import DOMUtils exposing (DOMState, domMetricsOn)
+import Dict exposing (Dict)
 import Ease
 import Editor.ContentTree as ContentTree
 import Editor.ControlBar as ControlBar
 import Editor.Overlay as Overlay
 import Function exposing (swirll)
-import Html.Attributes exposing (class, id, href, src)
+import Html exposing (Html, button, div, img, text)
+import Html.Attributes exposing (class, href, id, src)
 import Html.Events as Events
-import Html exposing (Html, text, div, button, img)
 import Html.Keyed
 import Markdown
 import Maybe.Extra exposing (isJust)
 import Model exposing (Content(..), ContentModel(..))
 import ModelUtils exposing (asMarkdown, asUUID, withMarkdown)
-import MultiwayTree as Tree exposing (Tree(Tree))
+import MultiwayTree as Tree exposing (Tree(..))
 import MultiwayTreeZipper as Zipper exposing (Zipper)
 import Navigation
 import Optional exposing (optional, required, when)
 import Renderer.ContentAsTree exposing (containerTreeToContent)
-import Renderer.Flexi exposing (Editor, LinkBuilder, Layout, Template)
+import Renderer.Flexi exposing (Editor, Layout, LinkBuilder, Template)
 import ResizeObserver exposing (ResizeEvent)
 import RouteUrl as Routing
-import ScrollPort exposing (Scroll, Move)
-import StateModel exposing (boolToMaybe, (>&&>), (>||>), (>##>), defaultTransition, mapWhenCompose)
+import ScrollPort exposing (Move, Scroll)
+import StateModel exposing ((>##>), (>&&>), (>||>), boolToMaybe, defaultTransition, mapWhenCompose)
 import Task.Extra exposing (message)
-import Time exposing (second, Time)
+import Time exposing (Time, second)
 import TreeUtils exposing (updateTree)
 import Utils exposing (error)
 
@@ -55,7 +54,7 @@ contentZipperToModel zipper =
         (Model.Content content) =
             Zipper.datum zipper
     in
-        content.model
+    content.model
 
 
 type Msg
@@ -207,13 +206,13 @@ updateWhenWithContent func state =
             func content |> Explore |> Just
 
         Markdown content selected ->
-            func content |> (flip Markdown) selected |> Just
+            func content |> (\b a -> Markdown a b) selected |> Just
 
         Preview content selected ->
-            func content |> (flip Preview) selected |> Just
+            func content |> (\b a -> Preview a b) selected |> Just
 
         Wysiwyg content selected inline ->
-            func content |> (swirll Wysiwyg) selected inline |> Just
+            func content |> swirll Wysiwyg selected inline |> Just
 
         _ ->
             Nothing
@@ -229,7 +228,7 @@ updateWhenWithSelectedModel func state =
             func selected |> Preview content |> Just
 
         Wysiwyg content selected inline ->
-            func selected |> (flip (Wysiwyg content)) inline |> Just
+            func selected |> (\b a -> Wysiwyg content a b) inline |> Just
 
         _ ->
             Nothing
@@ -391,10 +390,10 @@ updateWhenWithSlideButton func state =
             func slideButton |> Disabled |> Just
 
         Available slideButton available ->
-            func slideButton |> (flip Available) available |> Just
+            func slideButton |> (\b a -> Available a b) available |> Just
 
         Open slideButton available ->
-            func slideButton |> (flip Open) available |> Just
+            func slideButton |> (\b a -> Open a b) available |> Just
 
 
 updateWhenWithAvailable : (WithAvailable -> WithAvailable) -> Menu -> Maybe Menu
@@ -509,11 +508,11 @@ cseCallbacks =
         default =
             CSE.callbacks
     in
-        { default
-            | retrieveWithContainerBySlug = contentLoaded
-            , retrieveTree = treeFetched
-            , error = error Error
-        }
+    { default
+        | retrieveWithContainerBySlug = contentLoaded
+        , retrieveTree = treeFetched
+        , error = error Error
+    }
 
 
 contentLoaded : Content -> Model -> ( Model, Cmd Msg )
@@ -529,17 +528,17 @@ treeFetched content model =
         maybeContent =
             mapWhenWithContent (\{ contentItem } -> contentItem) model.mode
     in
-        ( { model
-            | menu =
-                disabledToAvailable
-                    { menuStyle = Animation.style menuClosedStyle
-                    , controlBar = ControlBar.init "slideInMenu" [ ( "collapseall", "control-icon control-icon__collapse-all" ) ]
-                    , contentTree = ContentTree.init content maybeContent
-                    }
-                    model.menu
-          }
-        , Cmd.none
-        )
+    ( { model
+        | menu =
+            disabledToAvailable
+                { menuStyle = Animation.style menuClosedStyle
+                , controlBar = ControlBar.init "slideInMenu" [ ( "collapseall", "control-icon control-icon__collapse-all" ) ]
+                , contentTree = ContentTree.init content maybeContent
+                }
+                model.menu
+      }
+    , Cmd.none
+    )
 
 
 csCallbacks : Content.Service.Callbacks Model Msg
@@ -548,10 +547,10 @@ csCallbacks =
         default =
             Content.Service.callbacks
     in
-        { default
-            | update = contentLoaded
-            , error = error Error
-        }
+    { default
+        | update = contentLoaded
+        , error = error Error
+    }
 
 
 
@@ -567,9 +566,9 @@ urlOf : Model -> Maybe String
 urlOf model =
     let
         slugToUrl (Content content) =
-            editorPrefix ++ (Maybe.withDefault "" content.slug)
+            editorPrefix ++ Maybe.withDefault "" content.slug
     in
-        mapWhenWithContent (\content -> slugToUrl content.contentItem) model.mode
+    mapWhenWithContent (\content -> slugToUrl content.contentItem) model.mode
 
 
 delta2url : Model -> Model -> Maybe Routing.UrlChange
@@ -581,15 +580,15 @@ delta2url prevModel newModel =
         -- changed =
         --     (prevModel.contentItem /= newModel.contentItem)
     in
-        case maybeUrl of
-            Just url ->
-                { entry = Routing.NewEntry
-                , url = url
-                }
-                    |> Just
+    case maybeUrl of
+        Just url ->
+            { entry = Routing.NewEntry
+            , url = url
+            }
+                |> Just
 
-            Nothing ->
-                Nothing
+        Nothing ->
+            Nothing
 
 
 location2messages : Navigation.Location -> List Msg
@@ -628,7 +627,7 @@ debugFilter msg =
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
-    case (debugFilter action) of
+    case debugFilter action of
         Animate msg ->
             updateAnimate msg model
 
@@ -706,26 +705,26 @@ updateAnimate msg model =
                 )
                 |> defaultTransition mode
     in
-        ( { model
-            | menu = (updateMenuStyle >> updateSlideButtonStyle) model.menu
-            , mode = updateInlineEditorStyle model.mode
-          }
-        , Cmd.none
-        )
+    ( { model
+        | menu = (updateMenuStyle >> updateSlideButtonStyle) model.menu
+        , mode = updateInlineEditorStyle model.mode
+      }
+    , Cmd.none
+    )
 
 
 {-| Forward on the content service messages to it.
 -}
 updateCSEApi : CSE.Msg -> Model -> ( Model, Cmd Msg )
 updateCSEApi cseMsg model =
-    (CSE.update cseCallbacks cseMsg model)
+    CSE.update cseCallbacks cseMsg model
 
 
 {-| Forward on the content service messages to it.
 -}
 updateContentServiceApi : Content.Service.Msg -> Model -> ( Model, Cmd Msg )
 updateContentServiceApi msg model =
-    (Content.Service.update csCallbacks msg model)
+    Content.Service.update csCallbacks msg model
 
 
 {-| Forward on the overlay msg to get an update from it.
@@ -768,13 +767,12 @@ updateOverlayMsg msg model =
                             )
 
                 Just (Overlay.ContentValue value) ->
-                    (updateWhenWithSelectedModel
+                    updateWhenWithSelectedModel
                         (\selected -> { selected | editedValue = Just value })
-                    )
                         mode
 
                 Just (Overlay.SelectMode "save") ->
-                    (mapWhenCompose mapWhenWithSelectedModel updateWhenWithContent)
+                    mapWhenCompose mapWhenWithSelectedModel updateWhenWithContent
                         (\selected ->
                             \withContent ->
                                 case selected.editedValue of
@@ -792,7 +790,7 @@ updateOverlayMsg msg model =
                                                         Content
                                                             { content
                                                                 | model =
-                                                                    (withMarkdown (contentZipperToModel zipper) value)
+                                                                    withMarkdown (contentZipperToModel zipper) value
                                                             }
                                                     )
                                                     zipper
@@ -801,7 +799,7 @@ updateOverlayMsg msg model =
                                             d =
                                                 Debug.log "save" newTree
                                         in
-                                            { withContent | contentItem = containerTreeToContent newTree }
+                                        { withContent | contentItem = containerTreeToContent newTree }
                         )
                         mode
 
@@ -816,7 +814,7 @@ updateOverlayMsg msg model =
                     -- fold the edited value back into the content model.
                     -- fold the content model back into the current content item.
                     -- Invoke update to save the content.
-                    (mapWhenCompose mapWhenWithSelectedModel mapWhenWithContent)
+                    mapWhenCompose mapWhenWithSelectedModel mapWhenWithContent
                         (\selected ->
                             \withContent ->
                                 case selected.editedValue of
@@ -834,14 +832,14 @@ updateOverlayMsg msg model =
                                                         Content
                                                             { content
                                                                 | model =
-                                                                    (withMarkdown (contentZipperToModel zipper) value)
+                                                                    withMarkdown (contentZipperToModel zipper) value
                                                             }
                                                     )
                                                     zipper
                                                     |> Maybe.withDefault tree
 
                                             (Content content) =
-                                                (containerTreeToContent newTree)
+                                                containerTreeToContent newTree
 
                                             id =
                                                 Maybe.withDefault "" content.id
@@ -849,11 +847,11 @@ updateOverlayMsg msg model =
                                             d =
                                                 Debug.log "save" content
                                         in
-                                            Content.Service.invokeUpdate
-                                                model.config.apiRoot
-                                                ContentServiceApi
-                                                id
-                                                (containerTreeToContent newTree)
+                                        Content.Service.invokeUpdate
+                                            model.config.apiRoot
+                                            ContentServiceApi
+                                            id
+                                            (containerTreeToContent newTree)
                         )
                         mode
                         |> Maybe.withDefault Cmd.none
@@ -873,19 +871,19 @@ updateOverlayMsg msg model =
         maybeOverlayUpdate mode =
             mapWhenWithSelectedModel (\selected -> Overlay.update msg selected.overlay) mode
     in
-        case maybeOverlayUpdate model.mode of
-            Just ( newOverlay, _, maybeOutMsg ) ->
-                ( { model
-                    | mode =
-                        (updateModeWithNewOverlay newOverlay)
-                            >##> (switchMode maybeOutMsg)
-                            |> defaultTransition model.mode
-                  }
-                , commandsForOverlayOutMsg maybeOutMsg model.mode
-                )
+    case maybeOverlayUpdate model.mode of
+        Just ( newOverlay, _, maybeOutMsg ) ->
+            ( { model
+                | mode =
+                    updateModeWithNewOverlay newOverlay
+                        >##> switchMode maybeOutMsg
+                        |> defaultTransition model.mode
+              }
+            , commandsForOverlayOutMsg maybeOutMsg model.mode
+            )
 
-            Nothing ->
-                ( model, Cmd.none )
+        Nothing ->
+            ( model, Cmd.none )
 
 
 {-| Fetch the content by its slug.
@@ -926,9 +924,9 @@ updateMouseOverContent zipper domState model =
                         mode
                     )
     in
-        ( { model | mode = exploreToMarkdown |> defaultTransition model.mode }
-        , Cmd.none
-        )
+    ( { model | mode = exploreToMarkdown |> defaultTransition model.mode }
+    , Cmd.none
+    )
 
 
 updateMouseOutContent : Model -> ( Model, Cmd Msg )
@@ -958,13 +956,14 @@ updateResize size model =
                         id =
                             "inline__wrapper" ++ asUUID contentModel
                     in
-                        { selected
-                            | overlay =
-                                if id == size.id then
-                                    Overlay.resize size selected.overlay
-                                else
-                                    selected.overlay
-                        }
+                    { selected
+                        | overlay =
+                            if id == size.id then
+                                Overlay.resize size selected.overlay
+
+                            else
+                                selected.overlay
+                    }
                 )
                 |> defaultTransition model.mode
       }
@@ -1002,18 +1001,18 @@ updateContentTreeMsg msg model =
         maybeContentTreeUpdate =
             mapWhenWithAvailable (\{ contentTree } -> ContentTree.update msg contentTree) model.menu
     in
-        case maybeContentTreeUpdate of
-            Just ( newTree, outMsg ) ->
-                ( { model
-                    | menu =
-                        updateWhenWithAvailable (\available -> { available | contentTree = newTree })
-                            |> defaultTransition model.menu
-                  }
-                , Maybe.map translateContentTreeOutMsg outMsg |> Maybe.withDefault Cmd.none
-                )
+    case maybeContentTreeUpdate of
+        Just ( newTree, outMsg ) ->
+            ( { model
+                | menu =
+                    updateWhenWithAvailable (\available -> { available | contentTree = newTree })
+                        |> defaultTransition model.menu
+              }
+            , Maybe.map translateContentTreeOutMsg outMsg |> Maybe.withDefault Cmd.none
+            )
 
-            Nothing ->
-                ( model, Cmd.none )
+        Nothing ->
+            ( model, Cmd.none )
 
 
 updateControlBarUpdate : ControlBar.Msg -> Model -> ( Model, Cmd Msg )
@@ -1048,33 +1047,33 @@ updateToggleMenu model =
                     }
                 )
     in
-        case model.menu of
-            Available _ _ ->
-                ( { model
-                    | menu =
-                        ((updateSlideButtonStyle slideButtonOpenStyle)
-                            >&&> (updateMenuStyle menuOpenStyle)
-                            >&&> menuToggle
-                        )
-                            |> defaultTransition model.menu
-                  }
-                , Cmd.none
-                )
+    case model.menu of
+        Available _ _ ->
+            ( { model
+                | menu =
+                    (updateSlideButtonStyle slideButtonOpenStyle
+                        >&&> updateMenuStyle menuOpenStyle
+                        >&&> menuToggle
+                    )
+                        |> defaultTransition model.menu
+              }
+            , Cmd.none
+            )
 
-            Open _ _ ->
-                ( { model
-                    | menu =
-                        ((updateSlideButtonStyle slideButtonClosedStyle)
-                            >&&> (updateMenuStyle menuClosedStyle)
-                            >&&> menuToggle
-                        )
-                            |> defaultTransition model.menu
-                  }
-                , Cmd.none
-                )
+        Open _ _ ->
+            ( { model
+                | menu =
+                    (updateSlideButtonStyle slideButtonClosedStyle
+                        >&&> updateMenuStyle menuClosedStyle
+                        >&&> menuToggle
+                    )
+                        |> defaultTransition model.menu
+              }
+            , Cmd.none
+            )
 
-            _ ->
-                ( model, Cmd.none )
+        _ ->
+            ( model, Cmd.none )
 
 
 updateControlBar : ControlBar.OutMsg -> Model -> ( Model, Cmd Msg )
@@ -1157,25 +1156,25 @@ view layouts templates model =
         maybeContent =
             mapWhenWithContent (\{ contentItem } -> contentItem) model.mode
     in
-        mapWhenWithContent
-            (\{ contentItem } ->
-                div []
-                    (optional
-                        [ mapWhenWithSelectedModel (\{ overlay } -> Overlay.view overlay |> Html.map OverlayMsg) model.mode
-                        , div []
-                            (optional
-                                [ mapWhenWithContent (\{ contentItem } -> contentView layouts templates model contentItem) model.mode
-                                , mapWhenWithSlideButton (\button -> slideButton button) model.menu
-                                , mapWhenWithAvailable (\available -> sideNav model available maybeContent) model.menu
-                                , when (isJust (maybeOpen model.menu)) clickPlane
-                                ]
-                            )
-                            |> required
-                        ]
-                    )
-            )
-            model.mode
-            |> Maybe.withDefault emptyDiv
+    mapWhenWithContent
+        (\{ contentItem } ->
+            div []
+                (optional
+                    [ mapWhenWithSelectedModel (\{ overlay } -> Overlay.view overlay |> Html.map OverlayMsg) model.mode
+                    , div []
+                        (optional
+                            [ mapWhenWithContent (\{ contentItem } -> contentView layouts templates model contentItem) model.mode
+                            , mapWhenWithSlideButton (\button -> slideButton button) model.menu
+                            , mapWhenWithAvailable (\available -> sideNav model available maybeContent) model.menu
+                            , when (isJust (maybeOpen model.menu)) clickPlane
+                            ]
+                        )
+                        |> required
+                    ]
+                )
+        )
+        model.mode
+        |> Maybe.withDefault emptyDiv
 
 
 slideButton : WithSlideButton -> Html Msg
@@ -1289,18 +1288,19 @@ editor mode zipper =
         htmlContent =
             mapWhenWithSelectedModel
                 (\selected ->
-                    if (asUUID (contentZipperToModel selected.selectedContent) == contentId) then
+                    if asUUID (contentZipperToModel selected.selectedContent) == contentId then
                         case selected.editedValue of
                             Just value ->
                                 markdownView <| withMarkdown contentModel value
 
                             Nothing ->
                                 defaultContent
+
                     else
                         defaultContent
                 )
                 mode
-                |> Maybe.withDefault (defaultContent)
+                |> Maybe.withDefault defaultContent
 
         defaultAttributes =
             [ class "editor-inline__wrapper" ]
@@ -1308,26 +1308,27 @@ editor mode zipper =
         attributes =
             mapWhenWithSelectedModel
                 (\selected ->
-                    if (asUUID (contentZipperToModel selected.selectedContent) == contentId) then
+                    if asUUID (contentZipperToModel selected.selectedContent) == contentId then
                         [ class "editor-inline__wrapper"
                         , class "watch-resize"
                         , id <| "inline__wrapper" ++ asUUID contentModel
                         ]
+
                     else
                         defaultAttributes
                 )
                 mode
-                |> Maybe.withDefault (defaultAttributes)
+                |> Maybe.withDefault defaultAttributes
     in
-        div
-            attributes
-            [ htmlContent
+    div
+        attributes
+        [ htmlContent
 
-            -- This is where the inline editor must go.
-            -- , div
-            --     (Animation.render model.inlineEditorStyle
-            --         ++ [ class "editor-inline__editor" ]
-            --     )
-            --     [ content
-            --     ]
-            ]
+        -- This is where the inline editor must go.
+        -- , div
+        --     (Animation.render model.inlineEditorStyle
+        --         ++ [ class "editor-inline__editor" ]
+        --     )
+        --     [ content
+        --     ]
+        ]

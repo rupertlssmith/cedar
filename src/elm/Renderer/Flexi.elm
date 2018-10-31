@@ -10,7 +10,7 @@ or on the server side when they are rendering content statically.
 
 import Dict exposing (Dict)
 import Html exposing (Html, node, text)
-import Model exposing (Content(Content), ContentModel, ContentType(ContentType))
+import Model exposing (Content(..), ContentModel, ContentType(..))
 import MultiwayTree as Tree exposing (Tree(..))
 import MultiwayTreeZipper as Zipper exposing (Zipper)
 import Renderer.ContentAsTree exposing (contentContainerToTree)
@@ -61,13 +61,13 @@ view layouts templates linker editor (Content content) =
                 template =
                     Dict.get contentType.template templates
             in
-                case ( layout, template ) of
-                    ( Nothing, _ ) ->
-                        Html.div [] [ Html.text "Failed to find a matching layout." ]
+            case ( layout, template ) of
+                ( Nothing, _ ) ->
+                    Html.div [] [ Html.text "Failed to find a matching layout." ]
 
-                    ( _, Nothing ) ->
-                        Html.div [] [ Html.text "Failed to find a matching template." ]
+                ( _, Nothing ) ->
+                    Html.div [] [ Html.text "Failed to find a matching template." ]
 
-                    ( Just layout, Just template ) ->
-                        ( (contentContainerToTree identity (Content content)), [] )
-                            |> layout template linker editor
+                ( Just layout, Just template ) ->
+                    ( contentContainerToTree identity (Content content), [] )
+                        |> layout template linker editor

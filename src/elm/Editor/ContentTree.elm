@@ -1,28 +1,28 @@
-module Editor.ContentTree
-    exposing
-        ( Msg
-        , OutMsg(..)
-        , Model
-        , init
-        , subscriptions
-        , update
-        , view
-        )
+module Editor.ContentTree exposing
+    ( Model
+    , Msg
+    , OutMsg(..)
+    , init
+    , subscriptions
+    , update
+    , view
+    )
 
-import Animation exposing (px, percent, Property, Interpolation, State)
+import Animation exposing (Interpolation, Property, State, percent, px)
 import AnimationUtil exposing (animateStyle)
 import Ease
 import Editor.ControlBar as ControlBar
+import Html exposing (Html, div, i, li, span, text, ul)
 import Html.Attributes exposing (class, href)
 import Html.Events as Events
-import Html exposing (Html, div, li, ul, i, text, span)
 import Maybe.Extra exposing (unwrap)
-import Model exposing (Content(Content), Relationship(Relationship))
+import Model exposing (Content(..), Relationship(..))
 import MultiwayTree as Tree exposing (Tree(..))
 import MultiwayTreeZipper as Zipper exposing (Zipper)
 import Renderer.ContentAsTree exposing (contentRelationshipsToTree)
-import Time exposing (second, Time)
-import TreeUtils exposing (updateTree, (&>))
+import Time exposing (Time, second)
+import TreeUtils exposing ((&>), updateTree)
+
 
 
 -- Data model
@@ -90,11 +90,11 @@ makeNode selectedContent (Content content) =
                 selected
                 [ ( "add", "control-icon control-icon__add" ) ]
     in
-        { id = id
-        , slug = Maybe.withDefault "" content.slug
-        , open = True
-        , controlBar = controlBar
-        }
+    { id = id
+    , slug = Maybe.withDefault "" content.slug
+    , open = True
+    , controlBar = controlBar
+    }
 
 
 contentToTree : Content -> Maybe Content -> ContentTree
@@ -165,28 +165,28 @@ update action model =
                     Zipper.goTo (\node -> id == node.id)
                         ( model.contentTree, [] )
             in
-                case controlBarZipper of
-                    Nothing ->
-                        ( model, Nothing )
+            case controlBarZipper of
+                Nothing ->
+                    ( model, Nothing )
 
-                    Just zipper ->
-                        let
-                            node =
-                                Zipper.datum zipper
+                Just zipper ->
+                    let
+                        node =
+                            Zipper.datum zipper
 
-                            newControlBar =
-                                ControlBar.update msg node.controlBar
+                        newControlBar =
+                            ControlBar.update msg node.controlBar
 
-                            newRootZipper =
-                                Zipper.updateDatum (\node -> { node | controlBar = newControlBar }) zipper
-                                    &> Zipper.goToRoot
-                        in
-                            case newRootZipper of
-                                Nothing ->
-                                    ( model, Nothing )
+                        newRootZipper =
+                            Zipper.updateDatum (\node -> { node | controlBar = newControlBar }) zipper
+                                &> Zipper.goToRoot
+                    in
+                    case newRootZipper of
+                        Nothing ->
+                            ( model, Nothing )
 
-                                Just ( newContentTree, _ ) ->
-                                    ( { model | contentTree = newContentTree }, Nothing )
+                        Just ( newContentTree, _ ) ->
+                            ( { model | contentTree = newContentTree }, Nothing )
 
         MouseOverNode zipper ->
             ( { model | hovered = Just zipper }, Nothing )
@@ -210,14 +210,14 @@ update action model =
                 newTree =
                     updateTree (\node -> { node | controlBar = ControlBar.show node.controlBar }) zipper
             in
-                case newTree of
-                    Nothing ->
-                        ( model, Nothing )
+            case newTree of
+                Nothing ->
+                    ( model, Nothing )
 
-                    Just newTree ->
-                        ( { model | contentTree = newTree |> hideAllControlBarsExcept node.id, selected = Just zipper }
-                        , Just <| Navigate location
-                        )
+                Just newTree ->
+                    ( { model | contentTree = newTree |> hideAllControlBarsExcept node.id, selected = Just zipper }
+                    , Just <| Navigate location
+                    )
 
         ControlBar outMsg ->
             ( model, Nothing )
@@ -234,8 +234,9 @@ hideAllControlBarsExcept id tree =
         (\node ->
             { node
                 | controlBar =
-                    if (node.id == id) then
+                    if node.id == id then
                         node.controlBar
+
                     else
                         ControlBar.hide node.controlBar
             }
@@ -268,8 +269,9 @@ hoverClass hovered nodeId =
             ""
 
         Just id ->
-            if (nodeId == id) then
+            if nodeId == id then
                 " tree-wholerow__hovered"
+
             else
                 ""
 
@@ -281,8 +283,9 @@ selectedClass selectedContent nodeId =
             ""
 
         Just (Content content) ->
-            if (Just nodeId == content.id) then
+            if Just nodeId == content.id then
                 " tree-wholerow__selected"
+
             else
                 ""
 
@@ -297,15 +300,15 @@ wholeRowDiv selectedContent hovered zipper =
             Maybe.map Zipper.datum hovered
                 |> Maybe.map .id
     in
-        div
-            [ class <|
-                "tree-wholerow"
-                    ++ (hoverClass hoveredId node.id)
-                    ++ (selectedClass selectedContent node.id)
-            , Events.onMouseOver <| MouseOverNode zipper
-            , Events.onClick <| SelectLocation zipper node.slug
-            ]
-            [ Html.map ControlBar <| ControlBar.view "tree-wholerow__controlbar" node.controlBar ]
+    div
+        [ class <|
+            "tree-wholerow"
+                ++ hoverClass hoveredId node.id
+                ++ selectedClass selectedContent node.id
+        , Events.onMouseOver <| MouseOverNode zipper
+        , Events.onClick <| SelectLocation zipper node.slug
+        ]
+        [ Html.map ControlBar <| ControlBar.view "tree-wholerow__controlbar" node.controlBar ]
 
 
 expandIcon : Zipper ContentNode -> Html Msg
@@ -314,20 +317,21 @@ expandIcon zipper =
         node =
             Zipper.datum zipper
     in
-        if node.open then
-            i
-                [ class "control-icon control-icon__open"
-                , Events.onMouseOver <| MouseOverNode zipper
-                , Events.onClick <| ToggleOpen zipper
-                ]
-                []
-        else
-            i
-                [ class "control-icon control-icon__closed"
-                , Events.onMouseOver <| MouseOverNode zipper
-                , Events.onClick <| ToggleOpen zipper
-                ]
-                []
+    if node.open then
+        i
+            [ class "control-icon control-icon__open"
+            , Events.onMouseOver <| MouseOverNode zipper
+            , Events.onClick <| ToggleOpen zipper
+            ]
+            []
+
+    else
+        i
+            [ class "control-icon control-icon__closed"
+            , Events.onMouseOver <| MouseOverNode zipper
+            , Events.onClick <| ToggleOpen zipper
+            ]
+            []
 
 
 itemHtml : Zipper ContentNode -> Html Msg
@@ -336,20 +340,20 @@ itemHtml zipper =
         node =
             Zipper.datum zipper
     in
-        span
-            [ class "tree-anchor"
-            , href <| "#" ++ node.slug
-            , Events.onMouseOver <| MouseOverNode zipper
-            , Events.onClick <| SelectLocation zipper node.slug
-            ]
-            [ text node.slug ]
+    span
+        [ class "tree-anchor"
+        , href <| "#" ++ node.slug
+        , Events.onMouseOver <| MouseOverNode zipper
+        , Events.onClick <| SelectLocation zipper node.slug
+        ]
+        [ text node.slug ]
 
 
 tree : Maybe Content -> Maybe (Zipper ContentNode) -> Zipper ContentNode -> Html Msg
 tree selectedContent hovered zipper =
     let
         innerTree (( Tree node children, _ ) as zipper) =
-            (case ( children, node.open ) of
+            case ( children, node.open ) of
                 ( [], _ ) ->
                     li []
                         [ wholeRowDiv selectedContent hovered zipper
@@ -379,7 +383,7 @@ tree selectedContent hovered zipper =
                                 (List.indexedMap
                                     (\index ->
                                         \child ->
-                                            Just (zipper)
+                                            Just zipper
                                                 &> Zipper.goToChild index
                                                 &> (\zipper -> Just (innerTree zipper))
                                     )
@@ -387,6 +391,5 @@ tree selectedContent hovered zipper =
                                 )
                             )
                         ]
-            )
     in
-        innerTree zipper
+    innerTree zipper

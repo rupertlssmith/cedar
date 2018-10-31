@@ -1,15 +1,14 @@
-module Renderer.ContentAsTree
-    exposing
-        ( contentRelationshipsToTree
-        , contentContainerToTree
-        , containerTreeToContent
-        )
+module Renderer.ContentAsTree exposing
+    ( containerTreeToContent
+    , contentContainerToTree
+    , contentRelationshipsToTree
+    )
 
 import Maybe.Extra exposing (unwrap)
-import Model exposing (Content(Content), Relationship(Relationship), ContentModel)
+import Model exposing (Content(..), ContentModel, Relationship(..))
 import MultiwayTree as Tree exposing (Tree(..))
 import MultiwayTreeZipper as Zipper exposing (Zipper)
-import TreeUtils exposing (updateTree, (&>))
+import TreeUtils exposing ((&>), updateTree)
 
 
 contentRelationshipsToTree : (Content -> a) -> Content -> Tree a
@@ -33,13 +32,13 @@ contentRelationshipsToTree makeNode content =
                                             children
 
                                         Just content ->
-                                            (innerContentToTree content) :: children
+                                            innerContentToTree content :: children
                             )
                             []
                             relationships
                         )
     in
-        innerContentToTree content
+    innerContentToTree content
 
 
 contentContainerToTree : (Content -> a) -> Content -> Tree a
@@ -58,13 +57,13 @@ contentContainerToTree makeNode content =
                         (List.foldr
                             (\content ->
                                 \children ->
-                                    (innerContentToTree content) :: children
+                                    innerContentToTree content :: children
                             )
                             []
                             container
                         )
     in
-        innerContentToTree content
+    innerContentToTree content
 
 
 containerTreeToContent : Tree Content -> Content
@@ -73,11 +72,11 @@ containerTreeToContent tree =
         (Content node) =
             Tree.datum tree
     in
-        Content
-            { node
-                | container =
-                    List.map
-                        (\child -> containerTreeToContent child)
-                        (Tree.children tree)
-                        |> Just
-            }
+    Content
+        { node
+            | container =
+                List.map
+                    (\child -> containerTreeToContent child)
+                    (Tree.children tree)
+                    |> Just
+        }

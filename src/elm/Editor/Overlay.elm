@@ -1,38 +1,37 @@
-module Editor.Overlay
-    exposing
-        ( Msg
-        , OutMsg(..)
-        , Model
-        , init
-        , subscriptions
-        , update
-        , view
-        , makeAware
-        , makeActive
-        , makeInactive
-        , clear
-        , resize
-        , scroll
-        )
+module Editor.Overlay exposing
+    ( Model
+    , Msg
+    , OutMsg(..)
+    , clear
+    , init
+    , makeActive
+    , makeAware
+    , makeInactive
+    , resize
+    , scroll
+    , subscriptions
+    , update
+    , view
+    )
 
-import Animation exposing (px, Property, Interpolation)
+import Animation exposing (Interpolation, Property, px)
 import AnimationUtil exposing (animateStyle)
 import Color
 import DOM exposing (Rectangle)
 import Ease
 import Editor.ControlBar as ControlBar
 import Function exposing (swirlr)
+import Html exposing (Html, button, div, text, textarea)
 import Html.Attributes exposing (class, href)
 import Html.Events as Events
-import Html exposing (Html, text, div, button, textarea)
 import Maybe exposing (andThen)
-import Maybe.Extra exposing (isJust, unwrap, orElse, join)
+import Maybe.Extra exposing (isJust, join, orElse, unwrap)
 import Optional exposing (optional, required, when)
 import ResizeObserver exposing (ResizeEvent)
 import ScrollPort exposing (Move)
-import StateModel exposing (boolToMaybe, (>&&>), (>||>), defaultTransition, mapWhenCompose)
+import StateModel exposing ((>&&>), (>||>), boolToMaybe, defaultTransition, mapWhenCompose)
 import Style exposing (StyleSheet)
-import Time exposing (second, Time)
+import Time exposing (Time, second)
 
 
 type Msg
@@ -166,7 +165,7 @@ updateWhenWithPosition func state =
             func position |> (\position -> Active position controlBar value) |> Just
 
         Inactive position controlBar ->
-            func position |> (flip Inactive) controlBar |> Just
+            func position |> (\b a -> Inactive a b) controlBar |> Just
 
         _ ->
             Nothing
@@ -186,7 +185,7 @@ updateWhenWithControlBar : (WithControlBar -> WithControlBar) -> State -> Maybe 
 updateWhenWithControlBar func state =
     case state of
         Active position controlBar value ->
-            func controlBar |> (flip (Active position)) value |> Just
+            func controlBar |> (\b a -> Active position a b) value |> Just
 
         Inactive position controlBar ->
             func controlBar |> Inactive position |> Just
@@ -218,7 +217,7 @@ awareToActive controlBar value =
 
 withControlBarToActive : WithValue -> State -> Maybe State
 withControlBarToActive value =
-    mapWhenCompose mapWhenWithPosition mapWhenWithControlBar ((swirlr Active) value)
+    mapWhenCompose mapWhenWithPosition mapWhenWithControlBar (swirlr Active value)
 
 
 toInactive : State -> Maybe State
@@ -319,7 +318,7 @@ debugFilter msg =
 
 update : Msg -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
 update msg model =
-    case (debugFilter msg) of
+    case debugFilter msg of
         Animate msg ->
             -- update animation when with position
             updateAnimate msg model
@@ -383,10 +382,13 @@ updateControlBar : String -> Model -> ( Model, Cmd Msg, Maybe OutMsg )
 updateControlBar name model =
     if name == "markdown" then
         ( model, Cmd.none, Just <| SelectMode name )
+
     else if name == "preview" then
         ( model, Cmd.none, Just <| SelectMode name )
+
     else if name == "save" then
         ( model, Cmd.none, Just <| SelectMode name )
+
     else
         ( model, Cmd.none, Nothing )
 
@@ -407,7 +409,7 @@ updateMouseOut model =
         | state =
             Maybe.Extra.unwrap
                 model.state
-                (toHidden)
+                toHidden
                 (maybeAware model.state)
       }
     , Cmd.none
@@ -448,15 +450,15 @@ makeAware rect model =
                 (overlayPositionedStyle rect |> Animation.style)
                 (overlayAwareStyle rect)
     in
-        { model
-            | state =
-                toAware
-                    { rect = rect
-                    , yOffset = 0.0
-                    , overlayStyle = newOverlayStyle rect
-                    }
-                    |> defaultTransition model.state
-        }
+    { model
+        | state =
+            toAware
+                { rect = rect
+                , yOffset = 0.0
+                , overlayStyle = newOverlayStyle rect
+                }
+                |> defaultTransition model.state
+    }
 
 
 makeActive : Float -> String -> Model -> Model
@@ -471,21 +473,20 @@ makeActive yOffset value model =
         controlBar =
             ControlBar.show initControlBar
     in
-        { model
-            | state =
-                (awareToActive { controlBar = controlBar } { value = value })
-                    >||> (withControlBarToActive { value = value })
-                    >&&>
-                        (updateWhenWithPosition
-                            (\position ->
-                                { position
-                                    | overlayStyle = newOverlayStyle position.overlayStyle position.rect
-                                    , yOffset = yOffset
-                                }
-                            )
+    { model
+        | state =
+            awareToActive { controlBar = controlBar } { value = value }
+                >||> withControlBarToActive { value = value }
+                >&&>
+                    updateWhenWithPosition
+                        (\position ->
+                            { position
+                                | overlayStyle = newOverlayStyle position.overlayStyle position.rect
+                                , yOffset = yOffset
+                            }
                         )
-                    |> defaultTransition model.state
-        }
+                |> defaultTransition model.state
+    }
 
 
 makeInactive : Model -> Model
@@ -519,21 +520,21 @@ resize size model =
                 _ ->
                     currentStyle
     in
-        { model
-            | state =
-                updateWhenWithPosition
-                    (\position ->
-                        let
-                            newRect =
-                                resize size position.rect
-                        in
-                            { position
-                                | rect = newRect
-                                , overlayStyle = newOverlayStyle newRect position.overlayStyle
-                            }
-                    )
-                    |> defaultTransition model.state
-        }
+    { model
+        | state =
+            updateWhenWithPosition
+                (\position ->
+                    let
+                        newRect =
+                            resize size position.rect
+                    in
+                    { position
+                        | rect = newRect
+                        , overlayStyle = newOverlayStyle newRect position.overlayStyle
+                    }
+                )
+                |> defaultTransition model.state
+    }
 
 
 scroll : Move -> Model -> Model
@@ -565,38 +566,38 @@ positionStyle rect =
 
 overlayHiddenStyle : List Property
 overlayHiddenStyle =
-    (Animation.exactly "border-style" "none")
-        :: (Animation.borderColor (Color.rgba 0 0 0 0.0))
-        :: (Animation.borderWidth (px 0.0))
-        :: (Animation.backgroundColor (Color.rgba 0 0 0 0.0))
+    Animation.exactly "border-style" "none"
+        :: Animation.borderColor (Color.rgba 0 0 0 0.0)
+        :: Animation.borderWidth (px 0.0)
+        :: Animation.backgroundColor (Color.rgba 0 0 0 0.0)
         :: positionStyle noRect
 
 
 overlayPositionedStyle : Rectangle -> List Property
 overlayPositionedStyle rect =
-    (Animation.exactly "border-style" "dotted")
-        :: (Animation.padding (px 0.0))
-        :: (Animation.borderColor (Color.rgba 0 0 0 0.0))
-        :: (Animation.borderWidth (px 5.0))
-        :: (Animation.backgroundColor (Color.rgba 0 0 0 0.0))
+    Animation.exactly "border-style" "dotted"
+        :: Animation.padding (px 0.0)
+        :: Animation.borderColor (Color.rgba 0 0 0 0.0)
+        :: Animation.borderWidth (px 5.0)
+        :: Animation.backgroundColor (Color.rgba 0 0 0 0.0)
         :: (zeroPosition >> enlarge 2.0 >> positionStyle) rect
 
 
 overlayAwareStyle : Rectangle -> List Property
 overlayAwareStyle rect =
-    (Animation.exactly "border-style" "dotted")
-        :: (Animation.borderColor (Color.rgba 0 0 0 0.4))
-        :: (Animation.borderWidth (px 1.0))
-        :: (Animation.backgroundColor (Color.rgba 0 0 0 0.04))
+    Animation.exactly "border-style" "dotted"
+        :: Animation.borderColor (Color.rgba 0 0 0 0.4)
+        :: Animation.borderWidth (px 1.0)
+        :: Animation.backgroundColor (Color.rgba 0 0 0 0.04)
         :: (zeroPosition >> enlarge 6.0 >> positionStyle) rect
 
 
 overlayActiveStyle : Rectangle -> List Property
 overlayActiveStyle rect =
-    (Animation.exactly "border-style" "dotted")
-        :: (Animation.borderColor (Color.rgba 0 0 0 0.8))
-        :: (Animation.borderWidth (px 2.0))
-        :: (Animation.backgroundColor (Color.rgba 255 255 255 0.1))
+    Animation.exactly "border-style" "dotted"
+        :: Animation.borderColor (Color.rgba 0 0 0 0.8)
+        :: Animation.borderWidth (px 2.0)
+        :: Animation.backgroundColor (Color.rgba 255 255 255 0.1)
         :: (zeroPosition >> enlarge 7.0 >> positionStyle) rect
 
 
@@ -690,18 +691,18 @@ view model =
             (positionStyle >> Animation.style >> Animation.render) position.rect
                 ++ [ class "editor-overlay__container" ]
     in
-        div
-            (mapWhenWithPosition attributes model.state |> Maybe.withDefault [])
-            (optional
-                [ mapWhenWithPosition (\_ -> overlayFrame model.state) model.state
-                , (maybeActive
-                    >||> maybeInactive
-                    >&&> mapWhenWithPosition (\{ rect, yOffset } -> clickPlane yOffset rect)
-                  )
-                    model.state
-                , mapWhenWithControlBar controlBar model.state
-                ]
-            )
+    div
+        (mapWhenWithPosition attributes model.state |> Maybe.withDefault [])
+        (optional
+            [ mapWhenWithPosition (\_ -> overlayFrame model.state) model.state
+            , (maybeActive
+                >||> maybeInactive
+                >&&> mapWhenWithPosition (\{ rect, yOffset } -> clickPlane yOffset rect)
+              )
+                model.state
+            , mapWhenWithControlBar controlBar model.state
+            ]
+        )
 
 
 controlBar : WithControlBar -> Html Msg
@@ -716,33 +717,33 @@ clickPlane yOffset rect =
         stylesheet =
             clickPlaneStylesheet <| translate 0 -yOffset <| enlarge 7.0 rect
     in
-        div []
-            [ Style.embed stylesheet
-            , div
-                [ class "click-plane__section"
-                , stylesheet.class TopLeft
-                , Events.onClick ClickOut
-                ]
-                []
-            , div
-                [ class "click-plane__section"
-                , stylesheet.class TopRight
-                , Events.onClick ClickOut
-                ]
-                []
-            , div
-                [ class "click-plane__section"
-                , stylesheet.class BottomLeft
-                , Events.onClick ClickOut
-                ]
-                []
-            , div
-                [ class "click-plane__section"
-                , stylesheet.class BottomRight
-                , Events.onClick ClickOut
-                ]
-                []
+    div []
+        [ Style.embed stylesheet
+        , div
+            [ class "click-plane__section"
+            , stylesheet.class TopLeft
+            , Events.onClick ClickOut
             ]
+            []
+        , div
+            [ class "click-plane__section"
+            , stylesheet.class TopRight
+            , Events.onClick ClickOut
+            ]
+            []
+        , div
+            [ class "click-plane__section"
+            , stylesheet.class BottomLeft
+            , Events.onClick ClickOut
+            ]
+            []
+        , div
+            [ class "click-plane__section"
+            , stylesheet.class BottomRight
+            , Events.onClick ClickOut
+            ]
+            []
+        ]
 
 
 overlayFrame : State -> Html Msg
@@ -755,11 +756,11 @@ overlayFrame state =
                    , Events.onClick ClickOverlay
                    ]
     in
-        div
-            (mapWhenWithPosition attributes state |> Maybe.withDefault [])
-            (optional
-                [ mapWhenWithValue overlayEditor state ]
-            )
+    div
+        (mapWhenWithPosition attributes state |> Maybe.withDefault [])
+        (optional
+            [ mapWhenWithValue overlayEditor state ]
+        )
 
 
 overlayEditor : WithValue -> Html Msg

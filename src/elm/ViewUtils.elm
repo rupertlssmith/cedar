@@ -1,13 +1,13 @@
 module ViewUtils exposing (rhythm1SpacerDiv)
 
 import Html exposing (..)
-import Html.Attributes exposing (title, class, action, attribute)
+import Html.Attributes exposing (action, attribute, class, title)
 import Material
-import Material.Options as Options exposing (Style, Property, cs, when, nop, disabled)
 import Material.Button as Button
-import Material.Icon as Icon
-import Material.Grid as Grid
 import Material.Dialog as Dialog
+import Material.Grid as Grid
+import Material.Icon as Icon
+import Material.Options as Options exposing (Property, Style, cs, disabled, nop, when)
 
 
 {-| A grid cell that is 6 columns on dektop and 4 on tablet and mobile. This
@@ -46,6 +46,7 @@ completeButton model mdl label isValid msg =
         [ Button.ripple
         , if isValid then
             Button.colored
+
           else
             Button.disabled
         , Options.onClick msg
@@ -74,7 +75,7 @@ cancelButton model mdl label msg =
         ]
 
 
-{-| Builds a control bar with *ok* and *cancel* actions.
+{-| Builds a control bar with _ok_ and _cancel_ actions.
 
   - The ok action is specified as button.
   - The cancel action is specified as a msg to trigger on the cancel button

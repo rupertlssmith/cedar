@@ -37,7 +37,7 @@ config =
 -}
 configDecoder : Decoder Config
 configDecoder =
-    (Decode.succeed
+    Decode.succeed
         (\applicationContextRoot apiRoot authApiRoot avatarApiRoot ->
             { applicationContextRoot = applicationContextRoot
             , apiRoot = apiRoot
@@ -45,7 +45,6 @@ configDecoder =
             , avatarApiRoot = avatarApiRoot
             }
         )
-    )
         |: field "applicationContextRoot" Decode.string
         |: field "apiRoot" Decode.string
         |: field "authApiRoot" Decode.string

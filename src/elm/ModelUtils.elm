@@ -6,7 +6,7 @@ module ModelUtils exposing (asMarkdown, withMarkdown, asUUID)
 
 -}
 
-import Model exposing (ContentModel(..), Panel(..), Titled(..), MdContent(..))
+import Model exposing (ContentModel(..), MdContent(..), Panel(..), Titled(..))
 
 
 {-| Extracts the markdown from a content model.

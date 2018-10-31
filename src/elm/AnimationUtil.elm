@@ -1,6 +1,6 @@
 module AnimationUtil exposing (animateStyle)
 
-import Animation exposing (Property, Interpolation, State)
+import Animation exposing (Interpolation, Property, State)
 
 
 animateStyle : Interpolation -> State -> List Property -> State

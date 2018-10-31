@@ -1,12 +1,11 @@
-module StateModel
-    exposing
-        ( boolToMaybe
-        , (>&&>)
-        , (>||>)
-        , (>##>)
-        , defaultTransition
-        , mapWhenCompose
-        )
+module StateModel exposing
+    ( (>##>)
+    , (>&&>)
+    , (>||>)
+    , boolToMaybe
+    , defaultTransition
+    , mapWhenCompose
+    )
 
 import Maybe exposing (andThen)
 import Maybe.Extra exposing (orElse, unwrap)
@@ -16,6 +15,7 @@ boolToMaybe : (a -> Bool) -> a -> Maybe a
 boolToMaybe filter val =
     if filter val then
         Just val
+
     else
         Nothing
 
@@ -44,7 +44,7 @@ functions.
 -}
 (>##>) : (a -> Maybe a) -> (a -> Maybe a) -> a -> Maybe a
 (>##>) fst snd val =
-    unwrap (snd val) (\fstOut -> (unwrap (Just fstOut) (Just) (snd fstOut))) (fst val)
+    unwrap (snd val) (\fstOut -> unwrap (Just fstOut) Just (snd fstOut)) (fst val)
 
 
 defaultTransition state trans =
@@ -54,4 +54,4 @@ defaultTransition state trans =
 mapWhenCompose : (c -> d -> Maybe a) -> (a -> d -> Maybe b) -> c -> d -> Maybe b
 mapWhenCompose mapWhen1 mapWhen2 func state =
     mapWhen1 func state
-        |> andThen ((flip mapWhen2) state)
+        |> andThen ((\b a -> mapWhen2 a b) state)

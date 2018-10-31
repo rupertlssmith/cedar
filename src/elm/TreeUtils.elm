@@ -1,13 +1,12 @@
-module TreeUtils
-    exposing
-        ( updateTree
-        , (&>)
-        , foldToLeft
-        , foldToRight
-        , foldToNext
-        , foldToPrevious
-        , foldToUp
-        )
+module TreeUtils exposing
+    ( (&>)
+    , foldToLeft
+    , foldToNext
+    , foldToPrevious
+    , foldToRight
+    , foldToUp
+    , updateTree
+    )
 
 import MultiwayTree as Tree exposing (Tree(..))
 import MultiwayTreeZipper as Zipper exposing (Zipper)
@@ -27,7 +26,7 @@ updateTree update zipper =
 
 (&>) : Maybe a -> (a -> Maybe b) -> Maybe b
 (&>) =
-    flip Maybe.andThen
+    \b a -> Maybe.andThen a b
 
 
 fold : (Zipper a -> Maybe (Zipper a)) -> (Zipper a -> b -> b) -> b -> Zipper a -> b

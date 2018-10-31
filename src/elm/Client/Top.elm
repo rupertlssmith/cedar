@@ -1,14 +1,4 @@
-module Client.Top
-    exposing
-        ( delta2url
-        , location2messages
-        , init
-        , update
-        , subscriptions
-        , view
-        , Model
-        , Msg
-        )
+module Client.Top exposing (delta2url, location2messages, init, update, subscriptions, view, Model, Msg)
 
 {-| The content editor client top module.
 
@@ -145,6 +135,7 @@ location2messages : Navigation.Location -> List Msg
 location2messages location =
     if location.hash == "" || location.hash == "#/welcome" then
         []
+
     else
         CE.location2messages (Debug.log "location2messages" location) |> List.map ContentEditorMsg
 
@@ -170,7 +161,7 @@ debugFilter msg =
 -}
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
-    case ( model.session, (debugFilter action) ) of
+    case ( model.session, debugFilter action ) of
         ( _, AuthMsg msg ) ->
             Update3.lift .auth (\x m -> { m | auth = x }) AuthMsg Auth.update msg model
                 |> Update3.evalMaybe updateOnAuthStatus Cmd.none
@@ -209,9 +200,9 @@ updateOnAuthStatus status model =
                         init =
                             CE.init config authenticated.subject
                     in
-                        Authenticated { contentEditor = Tuple.first init }
+                    Authenticated { contentEditor = Tuple.first init }
     in
-        ( { model | session = session }, Cmd.none )
+    ( { model | session = session }, Cmd.none )
 
 
 
