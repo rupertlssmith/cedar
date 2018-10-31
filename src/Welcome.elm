@@ -10,11 +10,6 @@ module Welcome exposing
 import Auth
 import Html exposing (Html, div, form, h4, img, text)
 import Html.Attributes exposing (action, class, href, src, title)
-import Material
-import Material.Button as Button
-import Material.Icon as Icon
-import Material.Options as Options
-import Material.Textfield as Textfield
 
 
 type alias Model =
