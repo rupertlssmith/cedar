@@ -23,6 +23,7 @@
         "elm/svg": "1.0.1 <= v < 2.0.0",
         "elm/time": "1.0.0 <= v < 2.0.0",
         "elm/url": "1.0.0 <= v < 2.0.0",
+        "elm-community/easing-functions": "2.0.0 <= v < 3.0.0",
         "elm-community/maybe-extra": "5.0.0 <= v < 6.0.0",
         "krisajenkins/elm-exts": "28.0.0 <= v < 29.0.0",
         "pablohirafuji/elm-markdown": "2.0.5 <= v < 3.0.0",
