@@ -16,8 +16,6 @@ import Color
 import Config exposing (Config)
 import Content.Service
 import Content.ServiceExtra as CSE
-import DOM exposing (Rectangle)
-import DOMUtils exposing (DOMState, domMetricsOn)
 import Dict exposing (Dict)
 import Ease
 import Editor.ContentTree as ContentTree

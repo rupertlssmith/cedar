@@ -17,7 +17,6 @@ module Editor.Overlay exposing
 import Animation exposing (Interpolation, Property, px)
 import AnimationUtil exposing (animateStyle)
 import Color
-import DOM exposing (Rectangle)
 import Ease
 import Editor.ControlBar as ControlBar
 import Html exposing (Html, button, div, text, textarea)
