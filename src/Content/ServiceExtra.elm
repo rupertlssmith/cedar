@@ -1,7 +1,6 @@
 module Content.ServiceExtra exposing (Callbacks, Msg(..), callbacks, invokeRetrieveTree, invokeRetrieveWithContainer, invokeRetrieveWithContainerBySlug, retrieveTreeTask, retrieveWithContainerBySlugTask, retrieveWithContainerTask, routes, update)
 
 import Http
-import Http.Decorators
 import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode exposing (..)
 import Model exposing (..)

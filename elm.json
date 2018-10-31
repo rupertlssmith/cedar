@@ -25,6 +25,7 @@
         "elm/url": "1.0.0 <= v < 2.0.0",
         "elm-community/maybe-extra": "5.0.0 <= v < 6.0.0",
         "krisajenkins/elm-exts": "28.0.0 <= v < 29.0.0",
+        "pablohirafuji/elm-markdown": "2.0.5 <= v < 3.0.0",
         "the-sett/elm-update-helper": "1.4.1 <= v < 2.0.0"
     },
     "test-dependencies": {}

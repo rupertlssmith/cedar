@@ -29,8 +29,6 @@ import Maybe.Extra exposing (isJust, join, orElse, unwrap)
 import Optional exposing (optional, required, when)
 import ResizeObserver exposing (ResizeEvent)
 import ScrollPort exposing (Move)
-import StateModel exposing ((>&&>), (>||>), boolToMaybe, defaultTransition, mapWhenCompose)
-import Style exposing (StyleSheet)
 import Time exposing (Time, second)
 
 

@@ -34,14 +34,11 @@ import Model exposing (Content(..), ContentModel(..))
 import ModelUtils exposing (asMarkdown, asUUID, withMarkdown)
 import MultiwayTree as Tree exposing (Tree(..))
 import MultiwayTreeZipper as Zipper exposing (Zipper)
-import Navigation
 import Optional exposing (optional, required, when)
 import Renderer.ContentAsTree exposing (containerTreeToContent)
 import Renderer.Flexi exposing (Editor, Layout, LinkBuilder, Template)
 import ResizeObserver exposing (ResizeEvent)
-import RouteUrl as Routing
 import ScrollPort exposing (Move, Scroll)
-import StateModel exposing ((>##>), (>&&>), (>||>), boolToMaybe, defaultTransition, mapWhenCompose)
 import Task.Extra exposing (message)
 import Time exposing (Time, second)
 import TreeUtils exposing (updateTree)
@@ -772,7 +769,8 @@ updateOverlayMsg msg model =
                         mode
 
                 Just (Overlay.SelectMode "save") ->
-                    mapWhenCompose mapWhenWithSelectedModel updateWhenWithContent
+                    mapWhenCompose mapWhenWithSelectedModel
+                        updateWhenWithContent
                         (\selected ->
                             \withContent ->
                                 case selected.editedValue of
@@ -814,7 +812,8 @@ updateOverlayMsg msg model =
                     -- fold the edited value back into the content model.
                     -- fold the content model back into the current content item.
                     -- Invoke update to save the content.
-                    mapWhenCompose mapWhenWithSelectedModel mapWhenWithContent
+                    mapWhenCompose mapWhenWithSelectedModel
+                        mapWhenWithContent
                         (\selected ->
                             \withContent ->
                                 case selected.editedValue of

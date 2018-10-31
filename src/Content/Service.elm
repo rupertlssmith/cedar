@@ -1,7 +1,6 @@
 module Content.Service exposing (Callbacks, Msg(..), callbacks, createTask, deleteTask, findAllTask, findByExampleTask, invokeCreate, invokeDelete, invokeFindAll, invokeFindByExample, invokeRetrieve, invokeUpdate, retrieveTask, routes, update, updateTask)
 
 import Http
-import Http.Decorators
 import Json.Decode as Decode exposing (..)
 import Json.Encode as Encode exposing (..)
 import Model exposing (..)
