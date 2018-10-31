@@ -20,7 +20,6 @@ import Color
 import DOM exposing (Rectangle)
 import Ease
 import Editor.ControlBar as ControlBar
-import Function exposing (swirlr)
 import Html exposing (Html, button, div, text, textarea)
 import Html.Attributes exposing (class, href)
 import Html.Events as Events

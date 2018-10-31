@@ -23,7 +23,6 @@ import Ease
 import Editor.ContentTree as ContentTree
 import Editor.ControlBar as ControlBar
 import Editor.Overlay as Overlay
-import Function exposing (swirll)
 import Html exposing (Html, button, div, img, text)
 import Html.Attributes exposing (class, href, id, src)
 import Html.Events as Events
